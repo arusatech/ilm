@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ILM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #1e293b;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --board: #f8fafc;
+            --accent: #4f46e5;
+            --accent-soft: #e0e7ff;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+        }
+
+        body {
+            font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+            color: var(--ink);
+            background: var(--board);
+        }
+
+        .board {
+            position: fixed;
+            inset: 0;
+            background-color: var(--board);
+            transition: background-image 200ms ease;
+        }
+
+        .board-grid {
+            background-size: 30px 30px;
+            background-image:
+                linear-gradient(to right, rgba(200, 200, 220, 0.45) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(200, 200, 220, 0.45) 1px, transparent 1px);
+        }
+
+        .board-dots {
+            background-size: 24px 24px;
+            background-image: radial-gradient(circle, rgba(150, 150, 180, 0.45) 1.5px, transparent 1.5px);
+        }
+
+        .ink {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            touch-action: none;
+            pointer-events: auto;
+            cursor: default;
+        }
+
+        .ink.is-draw {
+            cursor: crosshair;
+        }
+
+        .ink.is-text {
+            cursor: text;
+        }
+
+        .ink.is-move {
+            cursor: grab;
+        }
+
+        .ink.is-dragging {
+            cursor: grabbing;
+        }
+
+        .text-editor {
+            position: fixed;
+            z-index: 5;
+            min-width: 8rem;
+            min-height: 1.6rem;
+            margin: 0;
+            padding: 0.15rem 0.35rem;
+            border: 1.5px dashed var(--accent);
+            border-radius: 0.35rem;
+            background: rgba(255, 255, 255, 0.92);
+            color: inherit;
+            font: 600 16px/1.35 Inter, ui-sans-serif, system-ui, sans-serif;
+            outline: none;
+            resize: both;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+        }
+
+        .toolbar {
+            position: fixed;
+            top: 1.5rem;
+            left: 1rem;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.55rem;
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            border-radius: 1rem;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.1);
+            max-height: calc(100vh - 3rem);
+            overflow-x: hidden;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-width: thin;
+        }
+
+        .toolbar > * {
+            flex: 0 0 auto;
+        }
+
+        .rule {
+            width: 1.5rem;
+            height: 1px;
+            margin: 0.15rem 0;
+            border: 0;
+            background: var(--line);
+            flex: 0 0 auto;
+        }
+
+        .tool-group {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0;
+            width: 3.35rem;
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            border-radius: 0.85rem;
+            background: rgba(248, 250, 252, 0.72);
+            overflow: hidden;
+        }
+
+        .tool-group.is-open {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: #c7d2fe;
+        }
+
+        .tool-group-toggle {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            width: 100%;
+            margin: 0;
+            padding: 0.45rem 0.35rem;
+            border: 0;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font: inherit;
+        }
+
+        .tool-group-toggle:hover {
+            background: #eef2ff;
+            color: var(--accent);
+        }
+
+        .tool-group.is-open .tool-group-toggle {
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        .tool-group-toggle:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: -2px;
+        }
+
+        .group-preview {
+            display: grid;
+            place-items: center;
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 0.7rem;
+            background: #fff;
+            color: inherit;
+            box-shadow: inset 0 0 0 1px rgba(226, 232, 240, 0.9);
+        }
+
+        .group-preview svg {
+            width: 1.2rem;
+            height: 1.2rem;
+        }
+
+        .group-preview-swatch {
+            width: 1.2rem;
+            height: 1.2rem;
+            border-radius: 999px;
+            box-shadow: 0 0 0 2px #fff, 0 0 0 3px currentColor;
+        }
+
+        .tool-group-label {
+            margin: 0;
+            color: inherit;
+            font-size: 0.58rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            line-height: 1.15;
+            text-align: center;
+            text-transform: uppercase;
+            white-space: pre-line;
+        }
+
+        .tool-group-items {
+            --group-icon-size: 2.5rem;
+            --group-icon-gap: 0.3rem;
+            --group-visible-icons: 2;
+            --group-pad-y: 0.65rem;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--group-icon-gap);
+            padding: 0.2rem 0.35rem 0.45rem;
+            border-top: 1px solid var(--line);
+            max-height: calc(
+                (var(--group-visible-icons) * var(--group-icon-size))
+                + ((var(--group-visible-icons) - 1) * var(--group-icon-gap))
+                + var(--group-pad-y)
+            );
+            overflow-x: hidden;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-gutter: stable;
+            scrollbar-width: thin;
+            scroll-snap-type: y proximity;
+        }
+
+        .tool-group.is-open .tool-group-items {
+            display: flex;
+        }
+
+        .tool-group-items > .tool,
+        .tool-group-items > .swatch {
+            scroll-snap-align: start;
+        }
+
+        @media (min-height: 700px) {
+            .tool-group-items {
+                --group-visible-icons: 3;
+            }
+        }
+
+        @media (min-height: 900px) {
+            .tool-group-items {
+                --group-visible-icons: 4;
+            }
+        }
+
+        .tool {
+            display: grid;
+            place-items: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            padding: 0;
+            border: 0;
+            border-radius: 0.75rem;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            flex: 0 0 auto;
+        }
+
+        .tool:hover {
+            background: #eef2ff;
+            color: var(--accent);
+        }
+
+        .tool.is-active {
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        .tool.is-danger:hover {
+            background: #fef2f2;
+            color: #ef4444;
+        }
+
+        .tool:focus-visible,
+        .swatch:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .tool svg {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        .swatch {
+            width: 1.35rem;
+            height: 1.35rem;
+            padding: 0;
+            border: 0;
+            border-radius: 999px;
+            cursor: pointer;
+            box-shadow: 0 0 0 2px #fff, 0 0 0 2px transparent;
+        }
+
+        .swatch.is-selected {
+            box-shadow: 0 0 0 2px #fff, 0 0 0 4px currentColor;
+        }
+
+        .camera-sheet {
+            position: fixed;
+            inset: 0;
+            z-index: 40;
+            display: none;
+            place-items: center;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.55);
+        }
+
+        .camera-sheet.is-open {
+            display: grid;
+        }
+
+        .camera-card {
+            width: min(100%, 28rem);
+            overflow: hidden;
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            border-radius: 1rem;
+            background: #fff;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+        }
+
+        .camera-card video {
+            display: block;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            object-fit: cover;
+            background: #0f172a;
+        }
+
+        .camera-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            padding: 0.75rem;
+        }
+
+        .camera-actions button {
+            border: 0;
+            border-radius: 0.7rem;
+            padding: 0.55rem 0.9rem;
+            font: 600 0.85rem Inter, ui-sans-serif, system-ui, sans-serif;
+            cursor: pointer;
+        }
+
+        .camera-cancel {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .camera-shot {
+            background: var(--accent);
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <main id="board" class="board board-grid" aria-label="Whiteboard"></main>
+    <canvas id="ink" class="ink is-move" aria-label="Drawing layer"></canvas>
+    <input id="imageFileInput" type="file" accept="image/*" hidden>
+    <div id="cameraSheet" class="camera-sheet" aria-hidden="true">
+        <div class="camera-card" role="dialog" aria-label="Camera capture">
+            <video id="cameraVideo" autoplay playsinline muted></video>
+            <div class="camera-actions">
+                <button id="cameraCancel" class="camera-cancel" type="button">Cancel</button>
+                <button id="cameraShot" class="camera-shot" type="button">Capture</button>
+            </div>
+        </div>
+    </div>
+
+    <aside class="toolbar" aria-label="Toolbar">
+        <button class="tool is-active" type="button" data-tool="select" title="Select / Move" aria-pressed="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg>
+        </button>
+        <button class="tool" type="button" data-tool="pen" title="Pen" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </button>
+        <button class="tool" type="button" data-tool="highlighter" title="Highlighter" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>
+        </button>
+        <button class="tool" type="button" data-tool="eraser" title="Eraser" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
+        </button>
+        <button class="tool" type="button" data-tool="text" title="Text label" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V5h16v2"/><path d="M12 5v14"/><path d="M8 19h8"/></svg>
+        </button>
+
+        <hr class="rule">
+
+        <section class="tool-group" data-group="diagram">
+            <button class="tool-group-toggle" type="button" aria-expanded="false" aria-controls="items-diagram">
+                <span class="group-preview" data-preview="diagram" aria-hidden="true"></span>
+                <span class="tool-group-label">Flow</span>
+            </button>
+            <div id="items-diagram" class="tool-group-items">
+                <button class="tool" type="button" data-tool="ellipse" data-group="diagram" title="Ellipse (Venn / start-end)" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="12" rx="8" ry="6"/></svg>
+                </button>
+                <button class="tool" type="button" data-tool="rect" data-group="diagram" title="Rectangle (process)" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="6" width="16" height="12" rx="1"/></svg>
+                </button>
+                <button class="tool" type="button" data-tool="diamond" data-group="diagram" title="Diamond (decision)" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 9-8 9-8-9 8-9z"/></svg>
+                </button>
+                <button class="tool" type="button" data-tool="arrow" data-group="diagram" title="Arrow (flow)" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+                </button>
+                <button class="tool" type="button" data-tool="larrow" data-group="diagram" title="L arrow (elbow)" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6h10v10"/><path d="m12 13 3 3-3 3"/></svg>
+                </button>
+                <button class="tool" type="button" data-tool="darrow" data-group="diagram" title="Two-headed arrow" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m9 8-4 4 4 4"/><path d="m15 8 4 4-4 4"/></svg>
+                </button>
+            </div>
+        </section>
+
+        <section class="tool-group" data-group="colors">
+            <button class="tool-group-toggle" type="button" aria-expanded="false" aria-controls="items-colors">
+                <span class="group-preview" data-preview="colors" aria-hidden="true">
+                    <span class="group-preview-swatch" id="colorPreview"></span>
+                </span>
+                <span class="tool-group-label">Colors</span>
+            </button>
+            <div id="items-colors" class="tool-group-items" role="group" aria-label="Colors">
+                <button class="swatch is-selected" type="button" data-color="#2563eb" title="Blue" style="background:#2563eb;color:#2563eb"></button>
+                <button class="swatch" type="button" data-color="#dc2626" title="Red" style="background:#dc2626;color:#dc2626"></button>
+                <button class="swatch" type="button" data-color="#16a34a" title="Green" style="background:#16a34a;color:#16a34a"></button>
+                <button class="swatch" type="button" data-color="#d97706" title="Amber" style="background:#d97706;color:#d97706"></button>
+                <button class="swatch" type="button" data-color="#0f172a" title="Ink" style="background:#0f172a;color:#0f172a"></button>
+            </div>
+        </section>
+
+        <section class="tool-group" data-group="gallery">
+            <button class="tool-group-toggle" type="button" aria-expanded="false" aria-controls="items-gallery">
+                <span class="group-preview" data-preview="gallery" aria-hidden="true"></span>
+                <span class="tool-group-label">Gallery</span>
+            </button>
+            <div id="items-gallery" class="tool-group-items">
+                <button class="tool" type="button" data-gallery="camera" title="Camera capture">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                </button>
+                <button class="tool" type="button" data-gallery="image" title="Load image file">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                </button>
+            </div>
+        </section>
+
+        <hr class="rule">
+
+        <button id="patternToggle" class="tool" type="button" title="Switch to dot pattern">
+            <svg id="patternIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"></svg>
+        </button>
+        <button id="clearBoard" class="tool is-danger" type="button" title="Clear canvas drawings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        </button>
+    </aside>
+
+    <script>
+        const FREEHAND = new Set(["pen", "highlighter", "eraser"]);
+        const SHAPES = new Set(["rect", "ellipse", "diamond", "arrow", "larrow", "darrow"]);
+        const MOVABLE = new Set(["rect", "ellipse", "diamond", "arrow", "larrow", "darrow", "text", "stroke", "image"]);
+        const DIAGRAM_TOOLS = new Set(["ellipse", "rect", "diamond", "arrow", "larrow", "darrow"]);
+
+        const board = document.getElementById("board");
+        const canvas = document.getElementById("ink");
+        const ctx = canvas.getContext("2d");
+        const tools = Array.from(document.querySelectorAll("[data-tool]"));
+        const swatches = Array.from(document.querySelectorAll("[data-color]"));
+        const galleryButtons = Array.from(document.querySelectorAll("[data-gallery]"));
+        const toolGroups = Array.from(document.querySelectorAll(".tool-group"));
+        const patternToggle = document.getElementById("patternToggle");
+        const patternIcon = document.getElementById("patternIcon");
+        const colorPreview = document.getElementById("colorPreview");
+        const imageFileInput = document.getElementById("imageFileInput");
+        const cameraSheet = document.getElementById("cameraSheet");
+        const cameraVideo = document.getElementById("cameraVideo");
+        const cameraCancel = document.getElementById("cameraCancel");
+        const cameraShot = document.getElementById("cameraShot");
+
+        const patterns = {
+            grid: {
+                next: "dots",
+                label: "Grid",
+                title: "Switch to dot pattern",
+                icon: '<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/>'
+            },
+            dots: {
+                next: "grid",
+                label: "Dots",
+                title: "Switch to grid pattern",
+                icon: '<circle cx="6" cy="6" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="6" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="6" r="1.4" fill="currentColor" stroke="none"/><circle cx="6" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="6" cy="18" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="18" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="18" r="1.4" fill="currentColor" stroke="none"/>'
+            }
+        };
+
+        const scene = [];
+        let diagramChoice = "ellipse";
+        let galleryChoice = "image";
+        let currentTool = "select";
+        let currentColor = "#2563eb";
+        let openGroupName = null;
+        let draft = null;
+        let textEditor = null;
+        let selectedIndex = -1;
+        let dragState = null;
+        let cameraStream = null;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            redraw();
+        }
+
+        function updateCursor() {
+            canvas.classList.toggle("is-draw", FREEHAND.has(currentTool) || SHAPES.has(currentTool));
+            canvas.classList.toggle("is-text", currentTool === "text");
+            canvas.classList.toggle("is-move", currentTool === "select" && !dragState);
+            canvas.classList.toggle("is-dragging", Boolean(dragState));
+        }
+
+        function setOpenGroup(name) {
+            openGroupName = name;
+            let opened = null;
+            toolGroups.forEach((group) => {
+                const open = group.dataset.group === name;
+                group.classList.toggle("is-open", open);
+                const toggle = group.querySelector(".tool-group-toggle");
+                if (toggle) toggle.setAttribute("aria-expanded", open ? "true" : "false");
+                if (open) opened = group;
+            });
+            if (opened) {
+                requestAnimationFrame(() => {
+                    opened.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+                    const items = opened.querySelector(".tool-group-items");
+                    if (!items) return;
+                    const active = items.querySelector(".tool.is-active, .swatch.is-selected");
+                    if (active) {
+                        active.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+                    } else {
+                        items.scrollTop = 0;
+                    }
+                });
+            }
+        }
+
+        function syncDiagramPreview() {
+            const preview = document.querySelector('[data-preview="diagram"]');
+            const source = document.querySelector(`[data-tool="${diagramChoice}"] svg`);
+            if (!preview || !source) return;
+            preview.innerHTML = "";
+            preview.appendChild(source.cloneNode(true));
+        }
+
+        function syncGalleryPreview() {
+            const preview = document.querySelector('[data-preview="gallery"]');
+            const source = document.querySelector(`[data-gallery="${galleryChoice}"] svg`);
+            if (!preview || !source) return;
+            preview.innerHTML = "";
+            preview.appendChild(source.cloneNode(true));
+        }
+
+        function syncColorPreview() {
+            colorPreview.style.background = currentColor;
+            colorPreview.style.color = currentColor;
+        }
+
+        function updateGroupPreviews() {
+            syncDiagramPreview();
+            syncGalleryPreview();
+            syncColorPreview();
+        }
+
+        function setTool(name) {
+            if (name !== "text") commitTextEditor();
+            currentTool = name;
+            if (name !== "select") selectedIndex = -1;
+            if (DIAGRAM_TOOLS.has(name)) diagramChoice = name;
+
+            tools.forEach((button) => {
+                const active = button.dataset.tool === name;
+                button.classList.toggle("is-active", active);
+                button.setAttribute("aria-pressed", active ? "true" : "false");
+            });
+
+            updateGroupPreviews();
+            updateCursor();
+            redraw();
+        }
+
+        function setColor(color) {
+            currentColor = color;
+            swatches.forEach((swatch) => {
+                swatch.classList.toggle("is-selected", swatch.dataset.color === color);
+            });
+            syncColorPreview();
+            if (textEditor) textEditor.style.color = color;
+            if (currentTool === "select" && selectedIndex >= 0) {
+                const item = scene[selectedIndex];
+                if (item && item.kind !== "stroke") {
+                    item.color = color;
+                    redraw();
+                }
+                return;
+            }
+            if (currentTool === "select" || currentTool === "eraser") setTool("pen");
+        }
+
+        function applyPattern(name) {
+            const pattern = patterns[name];
+            board.classList.toggle("board-grid", name === "grid");
+            board.classList.toggle("board-dots", name === "dots");
+            patternToggle.dataset.pattern = name;
+            patternToggle.title = pattern.title;
+            patternToggle.setAttribute("aria-label", pattern.label + " pattern. " + pattern.title);
+            patternIcon.innerHTML = pattern.icon;
+        }
+
+        function pointFromEvent(event) {
+            const source = event.touches ? event.touches[0] : event;
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: source.clientX - rect.left,
+                y: source.clientY - rect.top
+            };
+        }
+
+        function bounds(x1, y1, x2, y2) {
+            return {
+                x: Math.min(x1, x2),
+                y: Math.min(y1, y2),
+                w: Math.abs(x2 - x1),
+                h: Math.abs(y2 - y1)
+            };
+        }
+
+        function inflate(box, pad) {
+            return {
+                x: box.x - pad,
+                y: box.y - pad,
+                w: box.w + pad * 2,
+                h: box.h + pad * 2
+            };
+        }
+
+        function pointInBox(point, box) {
+            return point.x >= box.x && point.x <= box.x + box.w && point.y >= box.y && point.y <= box.y + box.h;
+        }
+
+        function distanceToSegment(point, x1, y1, x2, y2) {
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            if (dx === 0 && dy === 0) return Math.hypot(point.x - x1, point.y - y1);
+            const t = Math.max(0, Math.min(1, ((point.x - x1) * dx + (point.y - y1) * dy) / (dx * dx + dy * dy)));
+            return Math.hypot(point.x - (x1 + t * dx), point.y - (y1 + t * dy));
+        }
+
+        function textMetrics(item) {
+            const lines = String(item.text || "").split("\n");
+            const size = item.size || 16;
+            const lineHeight = size * 1.35;
+            ctx.save();
+            ctx.font = `600 ${size}px Inter, ui-sans-serif, system-ui, sans-serif`;
+            let width = 0;
+            lines.forEach((line) => {
+                width = Math.max(width, ctx.measureText(line || " ").width);
+            });
+            ctx.restore();
+            return {
+                x: item.x,
+                y: item.y,
+                w: Math.max(width, 24),
+                h: Math.max(lines.length * lineHeight, lineHeight)
+            };
+        }
+
+        function itemBounds(item) {
+            if (item.kind === "text") return inflate(textMetrics(item), 6);
+            if (item.kind === "image") {
+                return inflate({ x: item.x, y: item.y, w: item.w, h: item.h }, 6);
+            }
+            if (item.kind === "stroke") {
+                let minX = Infinity;
+                let minY = Infinity;
+                let maxX = -Infinity;
+                let maxY = -Infinity;
+                item.points.forEach((point) => {
+                    minX = Math.min(minX, point.x);
+                    minY = Math.min(minY, point.y);
+                    maxX = Math.max(maxX, point.x);
+                    maxY = Math.max(maxY, point.y);
+                });
+                return inflate({ x: minX, y: minY, w: maxX - minX, h: maxY - minY }, 10);
+            }
+            return inflate(bounds(item.x1, item.y1, item.x2, item.y2), 8);
+        }
+
+        function hitTest(point) {
+            for (let index = scene.length - 1; index >= 0; index -= 1) {
+                const item = scene[index];
+                if (!MOVABLE.has(item.kind)) continue;
+
+                if (item.kind === "text" || item.kind === "image") {
+                    if (pointInBox(point, itemBounds(item))) return index;
+                    continue;
+                }
+
+                if (item.kind === "stroke") {
+                    for (let i = 1; i < item.points.length; i += 1) {
+                        const a = item.points[i - 1];
+                        const b = item.points[i];
+                        if (distanceToSegment(point, a.x, a.y, b.x, b.y) <= 10) return index;
+                    }
+                    continue;
+                }
+
+                if (item.kind === "arrow" || item.kind === "darrow") {
+                    if (distanceToSegment(point, item.x1, item.y1, item.x2, item.y2) <= 10) return index;
+                    continue;
+                }
+
+                if (item.kind === "larrow") {
+                    const midX = item.x2;
+                    const midY = item.y1;
+                    if (
+                        distanceToSegment(point, item.x1, item.y1, midX, midY) <= 10 ||
+                        distanceToSegment(point, midX, midY, item.x2, item.y2) <= 10
+                    ) {
+                        return index;
+                    }
+                    continue;
+                }
+
+                const box = bounds(item.x1, item.y1, item.x2, item.y2);
+                if (box.w < 4 || box.h < 4) continue;
+
+                if (item.kind === "rect") {
+                    if (pointInBox(point, inflate(box, 4))) return index;
+                } else if (item.kind === "ellipse") {
+                    const cx = box.x + box.w / 2;
+                    const cy = box.y + box.h / 2;
+                    const rx = Math.max(box.w / 2, 1);
+                    const ry = Math.max(box.h / 2, 1);
+                    const nx = (point.x - cx) / rx;
+                    const ny = (point.y - cy) / ry;
+                    if (nx * nx + ny * ny <= 1.08) return index;
+                } else if (item.kind === "diamond") {
+                    const cx = box.x + box.w / 2;
+                    const cy = box.y + box.h / 2;
+                    const nx = Math.abs(point.x - cx) / Math.max(box.w / 2, 1);
+                    const ny = Math.abs(point.y - cy) / Math.max(box.h / 2, 1);
+                    if (nx + ny <= 1.08) return index;
+                }
+            }
+            return -1;
+        }
+
+        function moveItem(item, dx, dy) {
+            if (item.kind === "text" || item.kind === "image") {
+                item.x += dx;
+                item.y += dy;
+                return;
+            }
+            if (item.kind === "stroke") {
+                item.points.forEach((point) => {
+                    point.x += dx;
+                    point.y += dy;
+                });
+                return;
+            }
+            item.x1 += dx;
+            item.y1 += dy;
+            item.x2 += dx;
+            item.y2 += dy;
+        }
+
+        function fitImageSize(naturalWidth, naturalHeight, maxSize = 320) {
+            const scale = Math.min(1, maxSize / Math.max(naturalWidth, naturalHeight, 1));
+            return {
+                w: Math.max(48, Math.round(naturalWidth * scale)),
+                h: Math.max(48, Math.round(naturalHeight * scale))
+            };
+        }
+
+        function placeImageOnBoard(source, naturalWidth, naturalHeight) {
+            const size = fitImageSize(naturalWidth, naturalHeight);
+            const item = {
+                kind: "image",
+                x: Math.round((canvas.width - size.w) / 2),
+                y: Math.round((canvas.height - size.h) / 2),
+                w: size.w,
+                h: size.h,
+                source
+            };
+            scene.push(item);
+            selectedIndex = scene.length - 1;
+            setTool("select");
+            setOpenGroup(null);
+            redraw();
+        }
+
+        function loadImageFromUrl(url) {
+            return new Promise((resolve, reject) => {
+                const image = new Image();
+                image.onload = () => resolve(image);
+                image.onerror = () => reject(new Error("Could not load image"));
+                image.src = url;
+            });
+        }
+
+        async function addImageFromFile(file) {
+            if (!file || !file.type.startsWith("image/")) return;
+            const url = URL.createObjectURL(file);
+            try {
+                const image = await loadImageFromUrl(url);
+                placeImageOnBoard(image, image.naturalWidth, image.naturalHeight);
+            } catch (error) {
+                URL.revokeObjectURL(url);
+                window.alert("Could not load that image file.");
+            }
+        }
+
+        async function openCamera() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                window.alert("Camera is not available in this browser.");
+                return;
+            }
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: "environment" } },
+                    audio: false
+                });
+                cameraVideo.srcObject = cameraStream;
+                cameraSheet.classList.add("is-open");
+                cameraSheet.setAttribute("aria-hidden", "false");
+            } catch (error) {
+                window.alert("Could not access the camera.");
+            }
+        }
+
+        function closeCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach((track) => track.stop());
+                cameraStream = null;
+            }
+            cameraVideo.srcObject = null;
+            cameraSheet.classList.remove("is-open");
+            cameraSheet.setAttribute("aria-hidden", "true");
+        }
+
+        function captureCameraFrame() {
+            if (!cameraVideo.videoWidth || !cameraVideo.videoHeight) return;
+            const shot = document.createElement("canvas");
+            shot.width = cameraVideo.videoWidth;
+            shot.height = cameraVideo.videoHeight;
+            shot.getContext("2d").drawImage(cameraVideo, 0, 0);
+            const image = new Image();
+            image.onload = () => {
+                placeImageOnBoard(image, image.naturalWidth, image.naturalHeight);
+                closeCamera();
+            };
+            image.src = shot.toDataURL("image/jpeg", 0.92);
+        }
+
+        function drawStroke(item) {
+            if (item.points.length < 2) return;
+
+            ctx.beginPath();
+            ctx.moveTo(item.points[0].x, item.points[0].y);
+            for (let i = 1; i < item.points.length; i += 1) {
+                ctx.lineTo(item.points[i].x, item.points[i].y);
+            }
+
+            if (item.mode === "eraser") {
+                ctx.globalCompositeOperation = "destination-out";
+                ctx.lineWidth = 24;
+                ctx.lineCap = "round";
+                ctx.lineJoin = "round";
+            } else if (item.mode === "highlighter") {
+                ctx.globalCompositeOperation = "source-over";
+                ctx.strokeStyle = item.color + "66";
+                ctx.lineWidth = 18;
+                ctx.lineCap = "square";
+                ctx.lineJoin = "miter";
+            } else {
+                ctx.globalCompositeOperation = "source-over";
+                ctx.strokeStyle = item.color;
+                ctx.lineWidth = 3;
+                ctx.lineCap = "round";
+                ctx.lineJoin = "round";
+            }
+
+            ctx.stroke();
+            ctx.globalCompositeOperation = "source-over";
+        }
+
+        function drawRect(item) {
+            const box = bounds(item.x1, item.y1, item.x2, item.y2);
+            ctx.strokeRect(box.x, box.y, box.w, box.h);
+        }
+
+        function drawEllipse(item) {
+            const box = bounds(item.x1, item.y1, item.x2, item.y2);
+            ctx.beginPath();
+            ctx.ellipse(
+                box.x + box.w / 2,
+                box.y + box.h / 2,
+                Math.max(box.w / 2, 0.5),
+                Math.max(box.h / 2, 0.5),
+                0,
+                0,
+                Math.PI * 2
+            );
+            ctx.stroke();
+        }
+
+        function drawDiamond(item) {
+            const box = bounds(item.x1, item.y1, item.x2, item.y2);
+            const cx = box.x + box.w / 2;
+            const cy = box.y + box.h / 2;
+            ctx.beginPath();
+            ctx.moveTo(cx, box.y);
+            ctx.lineTo(box.x + box.w, cy);
+            ctx.lineTo(cx, box.y + box.h);
+            ctx.lineTo(box.x, cy);
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        function drawArrowHead(x, y, angle, length) {
+            const head = Math.min(18, Math.max(10, length * 0.28));
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x - head * Math.cos(angle - Math.PI / 6), y - head * Math.sin(angle - Math.PI / 6));
+            ctx.moveTo(x, y);
+            ctx.lineTo(x - head * Math.cos(angle + Math.PI / 6), y - head * Math.sin(angle + Math.PI / 6));
+            ctx.stroke();
+        }
+
+        function drawArrow(item) {
+            const dx = item.x2 - item.x1;
+            const dy = item.y2 - item.y1;
+            const length = Math.hypot(dx, dy);
+            if (length < 2) return;
+
+            ctx.beginPath();
+            ctx.moveTo(item.x1, item.y1);
+            ctx.lineTo(item.x2, item.y2);
+            ctx.stroke();
+            drawArrowHead(item.x2, item.y2, Math.atan2(dy, dx), length);
+        }
+
+        function drawDoubleArrow(item) {
+            const dx = item.x2 - item.x1;
+            const dy = item.y2 - item.y1;
+            const length = Math.hypot(dx, dy);
+            if (length < 2) return;
+
+            ctx.beginPath();
+            ctx.moveTo(item.x1, item.y1);
+            ctx.lineTo(item.x2, item.y2);
+            ctx.stroke();
+            drawArrowHead(item.x2, item.y2, Math.atan2(dy, dx), length);
+            drawArrowHead(item.x1, item.y1, Math.atan2(-dy, -dx), length);
+        }
+
+        function drawLArrow(item) {
+            const midX = item.x2;
+            const midY = item.y1;
+            const horizontal = Math.abs(midX - item.x1);
+            const vertical = Math.abs(item.y2 - midY);
+            if (horizontal + vertical < 4) return;
+
+            ctx.beginPath();
+            ctx.moveTo(item.x1, item.y1);
+            ctx.lineTo(midX, midY);
+            ctx.lineTo(item.x2, item.y2);
+            ctx.stroke();
+
+            if (vertical >= 2) {
+                drawArrowHead(item.x2, item.y2, Math.atan2(item.y2 - midY, 0), vertical);
+            } else {
+                drawArrowHead(item.x2, item.y2, Math.atan2(0, midX - item.x1), horizontal);
+            }
+        }
+
+        function paintShape(item) {
+            ctx.globalCompositeOperation = "source-over";
+            ctx.strokeStyle = item.color;
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+            ctx.setLineDash(item.preview ? [6, 4] : []);
+
+            if (item.kind === "rect") drawRect(item);
+            else if (item.kind === "ellipse") drawEllipse(item);
+            else if (item.kind === "diamond") drawDiamond(item);
+            else if (item.kind === "arrow") drawArrow(item);
+            else if (item.kind === "darrow") drawDoubleArrow(item);
+            else if (item.kind === "larrow") drawLArrow(item);
+
+            ctx.setLineDash([]);
+        }
+
+        function drawText(item) {
+            const lines = String(item.text || "").split("\n");
+            const size = item.size || 16;
+            const lineHeight = size * 1.35;
+            ctx.globalCompositeOperation = "source-over";
+            ctx.fillStyle = item.color;
+            ctx.font = `600 ${size}px Inter, ui-sans-serif, system-ui, sans-serif`;
+            ctx.textBaseline = "top";
+            lines.forEach((line, index) => {
+                ctx.fillText(line, item.x, item.y + index * lineHeight);
+            });
+        }
+
+        function paintSelection(item) {
+            const box = itemBounds(item);
+            ctx.save();
+            ctx.globalCompositeOperation = "source-over";
+            ctx.strokeStyle = "#4f46e5";
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([5, 4]);
+            ctx.strokeRect(box.x, box.y, box.w, box.h);
+            ctx.setLineDash([]);
+            ctx.fillStyle = "#4f46e5";
+            const handles = [
+                [box.x, box.y],
+                [box.x + box.w, box.y],
+                [box.x, box.y + box.h],
+                [box.x + box.w, box.y + box.h]
+            ];
+            handles.forEach(([x, y]) => {
+                ctx.fillRect(x - 3.5, y - 3.5, 7, 7);
+            });
+            ctx.restore();
+        }
+
+        function drawImageItem(item) {
+            if (!item.source) return;
+            ctx.globalCompositeOperation = "source-over";
+            ctx.drawImage(item.source, item.x, item.y, item.w, item.h);
+        }
+
+        function paintItem(item) {
+            if (item.kind === "stroke") drawStroke(item);
+            else if (item.kind === "text") drawText(item);
+            else if (item.kind === "image") drawImageItem(item);
+            else paintShape(item);
+        }
+
+        function redraw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            scene.forEach(paintItem);
+            if (draft) paintItem(draft);
+            if (selectedIndex >= 0 && scene[selectedIndex]) paintSelection(scene[selectedIndex]);
+        }
+
+        function removeTextEditor() {
+            if (!textEditor) return;
+            textEditor.remove();
+            textEditor = null;
+        }
+
+        function commitTextEditor() {
+            if (!textEditor) return;
+            const value = textEditor.value.replace(/\s+$/g, "");
+            const x = Number(textEditor.dataset.x);
+            const y = Number(textEditor.dataset.y);
+            const color = textEditor.dataset.color || currentColor;
+            removeTextEditor();
+            if (!value) return;
+            scene.push({ kind: "text", text: value, x, y, color, size: 16 });
+            selectedIndex = scene.length - 1;
+            redraw();
+        }
+
+        function openTextEditor(point) {
+            commitTextEditor();
+            textEditor = document.createElement("textarea");
+            textEditor.className = "text-editor";
+            textEditor.rows = 1;
+            textEditor.placeholder = "Type label…";
+            textEditor.value = "";
+            textEditor.dataset.x = String(point.x);
+            textEditor.dataset.y = String(point.y);
+            textEditor.dataset.color = currentColor;
+            textEditor.style.left = `${point.x}px`;
+            textEditor.style.top = `${point.y}px`;
+            textEditor.style.color = currentColor;
+            document.body.appendChild(textEditor);
+            textEditor.focus();
+
+            textEditor.addEventListener("keydown", (event) => {
+                if (event.key === "Escape") {
+                    event.preventDefault();
+                    removeTextEditor();
+                    return;
+                }
+                if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    commitTextEditor();
+                }
+            });
+
+            textEditor.addEventListener("blur", () => {
+                commitTextEditor();
+            });
+        }
+
+        function startPointer(event) {
+            event.preventDefault();
+            const point = pointFromEvent(event);
+
+            if (currentTool === "select") {
+                const hit = hitTest(point);
+                selectedIndex = hit;
+                if (hit >= 0) {
+                    dragState = {
+                        index: hit,
+                        lastX: point.x,
+                        lastY: point.y
+                    };
+                    updateCursor();
+                }
+                redraw();
+                return;
+            }
+
+            if (currentTool === "text") {
+                openTextEditor(point);
+                return;
+            }
+
+            selectedIndex = -1;
+
+            if (FREEHAND.has(currentTool)) {
+                draft = {
+                    kind: "stroke",
+                    mode: currentTool,
+                    color: currentColor,
+                    points: [point]
+                };
+            } else if (SHAPES.has(currentTool)) {
+                draft = {
+                    kind: currentTool,
+                    color: currentColor,
+                    x1: point.x,
+                    y1: point.y,
+                    x2: point.x,
+                    y2: point.y,
+                    preview: true
+                };
+            }
+
+            redraw();
+        }
+
+        function movePointer(event) {
+            const point = pointFromEvent(event);
+
+            if (dragState) {
+                event.preventDefault();
+                const item = scene[dragState.index];
+                if (item) {
+                    moveItem(item, point.x - dragState.lastX, point.y - dragState.lastY);
+                    dragState.lastX = point.x;
+                    dragState.lastY = point.y;
+                    redraw();
+                }
+                return;
+            }
+
+            if (!draft) return;
+            event.preventDefault();
+
+            if (draft.kind === "stroke") {
+                draft.points.push(point);
+            } else {
+                draft.x2 = point.x;
+                draft.y2 = point.y;
+            }
+
+            redraw();
+        }
+
+        function stopPointer() {
+            if (dragState) {
+                dragState = null;
+                updateCursor();
+                redraw();
+                return;
+            }
+
+            if (!draft) return;
+
+            if (draft.kind === "stroke") {
+                if (draft.points.length > 1) {
+                    scene.push({ ...draft, points: draft.points.map((point) => ({ ...point })) });
+                    selectedIndex = -1;
+                }
+            } else {
+                const size = Math.hypot(draft.x2 - draft.x1, draft.y2 - draft.y1);
+                if (size > 4) {
+                    scene.push({
+                        kind: draft.kind,
+                        color: draft.color,
+                        x1: draft.x1,
+                        y1: draft.y1,
+                        x2: draft.x2,
+                        y2: draft.y2
+                    });
+                    selectedIndex = -1;
+                }
+            }
+
+            draft = null;
+            redraw();
+        }
+
+        toolGroups.forEach((group) => {
+            const toggle = group.querySelector(".tool-group-toggle");
+            toggle.addEventListener("click", () => {
+                const name = group.dataset.group;
+                setOpenGroup(openGroupName === name ? null : name);
+            });
+        });
+
+        tools.forEach((button) => {
+            button.addEventListener("click", () => {
+                setTool(button.dataset.tool);
+                if (button.dataset.group === "diagram") setOpenGroup("diagram");
+                else setOpenGroup(null);
+            });
+        });
+
+        swatches.forEach((swatch) => {
+            swatch.addEventListener("click", () => {
+                setColor(swatch.dataset.color);
+                setOpenGroup("colors");
+            });
+        });
+
+        galleryButtons.forEach((button) => {
+            button.addEventListener("click", () => {
+                galleryChoice = button.dataset.gallery;
+                syncGalleryPreview();
+                setOpenGroup("gallery");
+                if (galleryChoice === "image") imageFileInput.click();
+                if (galleryChoice === "camera") openCamera();
+            });
+        });
+
+        imageFileInput.addEventListener("change", async () => {
+            const file = imageFileInput.files && imageFileInput.files[0];
+            imageFileInput.value = "";
+            if (file) await addImageFromFile(file);
+        });
+
+        cameraCancel.addEventListener("click", closeCamera);
+        cameraShot.addEventListener("click", captureCameraFrame);
+        cameraSheet.addEventListener("click", (event) => {
+            if (event.target === cameraSheet) closeCamera();
+        });
+
+        patternToggle.addEventListener("click", () => {
+            const current = patternToggle.dataset.pattern || "grid";
+            applyPattern(patterns[current].next);
+            setOpenGroup(null);
+        });
+
+        document.getElementById("clearBoard").addEventListener("click", () => {
+            commitTextEditor();
+            closeCamera();
+            scene.length = 0;
+            draft = null;
+            selectedIndex = -1;
+            dragState = null;
+            redraw();
+        });
+
+        window.addEventListener("keydown", (event) => {
+            if (cameraSheet.classList.contains("is-open") && event.key === "Escape") {
+                event.preventDefault();
+                closeCamera();
+                return;
+            }
+            if (textEditor) return;
+            if ((event.key === "Delete" || event.key === "Backspace") && selectedIndex >= 0) {
+                event.preventDefault();
+                scene.splice(selectedIndex, 1);
+                selectedIndex = -1;
+                redraw();
+            }
+            if (event.key === "Escape") {
+                selectedIndex = -1;
+                dragState = null;
+                updateCursor();
+                redraw();
+            }
+        });
+
+        canvas.addEventListener("mousedown", startPointer);
+        canvas.addEventListener("mousemove", movePointer);
+        window.addEventListener("mouseup", stopPointer);
+        canvas.addEventListener("touchstart", startPointer, { passive: false });
+        canvas.addEventListener("touchmove", movePointer, { passive: false });
+        canvas.addEventListener("touchend", stopPointer);
+        window.addEventListener("resize", resizeCanvas);
+
+        resizeCanvas();
+        applyPattern("grid");
+        setOpenGroup(null);
+        updateGroupPreviews();
+        updateCursor();
+    </script>
+</body>
+</html>
