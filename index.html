@@ -367,12 +367,202 @@
             background: var(--accent);
             color: #fff;
         }
+
+        .tool.is-session {
+            color: var(--accent);
+        }
+
+        .tool.is-recording {
+            background: #fee2e2;
+            color: #dc2626;
+            animation: record-pulse 1.2s ease-in-out infinite;
+        }
+
+        @keyframes record-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.35); }
+            50% { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
+        }
+
+        .sheet {
+            position: fixed;
+            inset: 0;
+            z-index: 45;
+            display: none;
+            place-items: center;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.55);
+        }
+
+        .sheet.is-open {
+            display: grid;
+        }
+
+        .sheet-card {
+            width: min(100%, 22rem);
+            padding: 1.1rem;
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            border-radius: 1rem;
+            background: #fff;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+        }
+
+        .sheet-card h2 {
+            margin: 0 0 0.85rem;
+            font-size: 1.05rem;
+        }
+
+        .tutor-avatar-wrap {
+            display: grid;
+            place-items: center;
+            margin-bottom: 0.85rem;
+        }
+
+        .tutor-avatar {
+            width: 7.5rem;
+            height: 10rem;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 0.9rem;
+            background:
+                linear-gradient(180deg, #e2e8f0, #f8fafc);
+            object-fit: cover;
+        }
+
+        .tutor-avatar.is-empty {
+            display: grid;
+            place-items: center;
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-align: center;
+            padding: 0.5rem;
+        }
+
+        .sheet-field {
+            display: grid;
+            gap: 0.35rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .sheet-field label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .sheet-field input[type="text"] {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 0.65rem;
+            padding: 0.55rem 0.7rem;
+            font: inherit;
+        }
+
+        .sheet-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+
+        .sheet-actions button {
+            border: 0;
+            border-radius: 0.7rem;
+            padding: 0.55rem 0.9rem;
+            font: 600 0.85rem Inter, ui-sans-serif, system-ui, sans-serif;
+            cursor: pointer;
+        }
+
+        .btn-muted {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .news-pip {
+            position: fixed;
+            right: 1.25rem;
+            bottom: 1.25rem;
+            z-index: 20;
+            display: none;
+            width: 7.5rem;
+            aspect-ratio: 3 / 4;
+            overflow: hidden;
+            border: 2px solid #fff;
+            border-radius: 0.9rem;
+            background: #0f172a;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.28);
+            touch-action: none;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .news-pip.is-visible {
+            display: block;
+        }
+
+        .news-pip.is-dragging {
+            cursor: grabbing;
+        }
+
+        .news-pip img,
+        .news-pip video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: none;
+        }
+
+        .news-pip-label {
+            position: absolute;
+            left: 0.4rem;
+            right: 0.4rem;
+            bottom: 0.4rem;
+            padding: 0.2rem 0.35rem;
+            border-radius: 0.4rem;
+            background: rgba(15, 23, 42, 0.7);
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-align: center;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
     <main id="board" class="board board-grid" aria-label="Whiteboard"></main>
     <canvas id="ink" class="ink is-move" aria-label="Drawing layer"></canvas>
     <input id="imageFileInput" type="file" accept="image/*" hidden>
+    <input id="tutorPhotoInput" type="file" accept="image/*" hidden>
+
+    <div id="newsPip" class="news-pip" aria-label="News reader">
+        <img id="newsPipImage" alt="Tutor">
+        <div id="newsPipLabel" class="news-pip-label">Tutor</div>
+    </div>
+
+    <div id="tutorSheet" class="sheet" aria-hidden="true">
+        <div class="sheet-card" role="dialog" aria-label="Tutor profile">
+            <h2>Tutor profile</h2>
+            <div class="tutor-avatar-wrap">
+                <div id="tutorAvatarEmpty" class="tutor-avatar is-empty">Upload photo</div>
+                <img id="tutorAvatarImage" class="tutor-avatar" alt="Tutor photo" hidden>
+            </div>
+            <div class="sheet-field">
+                <label for="tutorNameInput">Display name</label>
+                <input id="tutorNameInput" type="text" maxlength="40" placeholder="News reader name">
+            </div>
+            <div class="sheet-actions">
+                <button id="tutorUploadBtn" class="btn-muted" type="button">Upload picture</button>
+                <button id="tutorCloseBtn" class="btn-muted" type="button">Close</button>
+                <button id="tutorSaveBtn" class="btn-primary" type="button">Save</button>
+            </div>
+        </div>
+    </div>
+
     <div id="cameraSheet" class="camera-sheet" aria-hidden="true">
         <div class="camera-card" role="dialog" aria-label="Camera capture">
             <video id="cameraVideo" autoplay playsinline muted></video>
@@ -384,6 +574,15 @@
     </div>
 
     <aside class="toolbar" aria-label="Toolbar">
+        <button id="tutorBtn" class="tool is-session" type="button" title="Tutor profile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </button>
+        <button id="recordBtn" class="tool" type="button" title="Start recording" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+        </button>
+
+        <hr class="rule">
+
         <button class="tool is-active" type="button" data-tool="select" title="Select / Move" aria-pressed="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg>
         </button>
@@ -487,10 +686,24 @@
         const patternIcon = document.getElementById("patternIcon");
         const colorPreview = document.getElementById("colorPreview");
         const imageFileInput = document.getElementById("imageFileInput");
+        const tutorPhotoInput = document.getElementById("tutorPhotoInput");
+        const tutorBtn = document.getElementById("tutorBtn");
+        const recordBtn = document.getElementById("recordBtn");
+        const tutorSheet = document.getElementById("tutorSheet");
+        const tutorNameInput = document.getElementById("tutorNameInput");
+        const tutorAvatarEmpty = document.getElementById("tutorAvatarEmpty");
+        const tutorAvatarImage = document.getElementById("tutorAvatarImage");
+        const tutorUploadBtn = document.getElementById("tutorUploadBtn");
+        const tutorCloseBtn = document.getElementById("tutorCloseBtn");
+        const tutorSaveBtn = document.getElementById("tutorSaveBtn");
+        const newsPip = document.getElementById("newsPip");
+        const newsPipImage = document.getElementById("newsPipImage");
+        const newsPipLabel = document.getElementById("newsPipLabel");
         const cameraSheet = document.getElementById("cameraSheet");
         const cameraVideo = document.getElementById("cameraVideo");
         const cameraCancel = document.getElementById("cameraCancel");
         const cameraShot = document.getElementById("cameraShot");
+        const TUTOR_STORAGE_KEY = "ilm-tutor-profile";
 
         const patterns = {
             grid: {
@@ -518,6 +731,15 @@
         let selectedIndex = -1;
         let dragState = null;
         let cameraStream = null;
+        let tutorProfile = { name: "Tutor", photo: "" };
+        let pipDrag = null;
+        let isRecording = false;
+        let mediaRecorder = null;
+        let recordChunks = [];
+        let recordCanvas = null;
+        let recordCtx = null;
+        let recordStream = null;
+        let recordFrameId = 0;
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -1277,10 +1499,289 @@
             if (event.target === cameraSheet) closeCamera();
         });
 
+        function loadTutorProfile() {
+            try {
+                const raw = localStorage.getItem(TUTOR_STORAGE_KEY);
+                if (!raw) return;
+                const parsed = JSON.parse(raw);
+                tutorProfile = {
+                    name: parsed.name || "Tutor",
+                    photo: parsed.photo || ""
+                };
+            } catch (error) {
+                tutorProfile = { name: "Tutor", photo: "" };
+            }
+        }
+
+        function saveTutorProfile() {
+            localStorage.setItem(TUTOR_STORAGE_KEY, JSON.stringify(tutorProfile));
+        }
+
+        function syncTutorProfileUi() {
+            tutorNameInput.value = tutorProfile.name || "";
+            newsPipLabel.textContent = tutorProfile.name || "Tutor";
+            if (tutorProfile.photo) {
+                tutorAvatarImage.src = tutorProfile.photo;
+                tutorAvatarImage.hidden = false;
+                tutorAvatarEmpty.hidden = true;
+                newsPipImage.src = tutorProfile.photo;
+                newsPip.classList.add("is-visible");
+            } else {
+                tutorAvatarImage.removeAttribute("src");
+                tutorAvatarImage.hidden = true;
+                tutorAvatarEmpty.hidden = false;
+                newsPipImage.removeAttribute("src");
+                newsPip.classList.remove("is-visible");
+            }
+        }
+
+        function openTutorSheet() {
+            syncTutorProfileUi();
+            tutorSheet.classList.add("is-open");
+            tutorSheet.setAttribute("aria-hidden", "false");
+        }
+
+        function closeTutorSheet() {
+            tutorSheet.classList.remove("is-open");
+            tutorSheet.setAttribute("aria-hidden", "true");
+        }
+
+        function clampPipPosition(left, top) {
+            const maxLeft = Math.max(8, window.innerWidth - newsPip.offsetWidth - 8);
+            const maxTop = Math.max(8, window.innerHeight - newsPip.offsetHeight - 8);
+            return {
+                left: Math.min(Math.max(8, left), maxLeft),
+                top: Math.min(Math.max(8, top), maxTop)
+            };
+        }
+
+        function startPipDrag(event) {
+            if (!newsPip.classList.contains("is-visible")) return;
+            const point = event.touches ? event.touches[0] : event;
+            const rect = newsPip.getBoundingClientRect();
+            pipDrag = {
+                offsetX: point.clientX - rect.left,
+                offsetY: point.clientY - rect.top
+            };
+            newsPip.classList.add("is-dragging");
+            event.preventDefault();
+        }
+
+        function movePipDrag(event) {
+            if (!pipDrag) return;
+            const point = event.touches ? event.touches[0] : event;
+            const next = clampPipPosition(point.clientX - pipDrag.offsetX, point.clientY - pipDrag.offsetY);
+            newsPip.style.left = `${next.left}px`;
+            newsPip.style.top = `${next.top}px`;
+            newsPip.style.right = "auto";
+            newsPip.style.bottom = "auto";
+            event.preventDefault();
+        }
+
+        function stopPipDrag() {
+            pipDrag = null;
+            newsPip.classList.remove("is-dragging");
+        }
+
+        function drawBoardBackground(targetCtx, width, height) {
+            targetCtx.fillStyle = "#f8fafc";
+            targetCtx.fillRect(0, 0, width, height);
+
+            if (board.classList.contains("board-grid")) {
+                targetCtx.strokeStyle = "rgba(200, 200, 220, 0.45)";
+                targetCtx.lineWidth = 1;
+                for (let x = 0; x <= width; x += 30) {
+                    targetCtx.beginPath();
+                    targetCtx.moveTo(x + 0.5, 0);
+                    targetCtx.lineTo(x + 0.5, height);
+                    targetCtx.stroke();
+                }
+                for (let y = 0; y <= height; y += 30) {
+                    targetCtx.beginPath();
+                    targetCtx.moveTo(0, y + 0.5);
+                    targetCtx.lineTo(width, y + 0.5);
+                    targetCtx.stroke();
+                }
+            } else if (board.classList.contains("board-dots")) {
+                targetCtx.fillStyle = "rgba(150, 150, 180, 0.45)";
+                for (let x = 12; x <= width; x += 24) {
+                    for (let y = 12; y <= height; y += 24) {
+                        targetCtx.beginPath();
+                        targetCtx.arc(x, y, 1.5, 0, Math.PI * 2);
+                        targetCtx.fill();
+                    }
+                }
+            }
+        }
+
+        function drawPipToRecord(targetCtx) {
+            if (!newsPip.classList.contains("is-visible") || !tutorProfile.photo) return;
+            const rect = newsPip.getBoundingClientRect();
+            const radius = 12;
+            targetCtx.save();
+            targetCtx.beginPath();
+            targetCtx.moveTo(rect.left + radius, rect.top);
+            targetCtx.arcTo(rect.right, rect.top, rect.right, rect.bottom, radius);
+            targetCtx.arcTo(rect.right, rect.bottom, rect.left, rect.bottom, radius);
+            targetCtx.arcTo(rect.left, rect.bottom, rect.left, rect.top, radius);
+            targetCtx.arcTo(rect.left, rect.top, rect.right, rect.top, radius);
+            targetCtx.closePath();
+            targetCtx.clip();
+            targetCtx.fillStyle = "#0f172a";
+            targetCtx.fillRect(rect.left, rect.top, rect.width, rect.height);
+            if (newsPipImage.complete && newsPipImage.naturalWidth) {
+                targetCtx.drawImage(newsPipImage, rect.left, rect.top, rect.width, rect.height);
+            }
+            targetCtx.fillStyle = "rgba(15, 23, 42, 0.7)";
+            targetCtx.fillRect(rect.left + 6, rect.bottom - 28, rect.width - 12, 20);
+            targetCtx.fillStyle = "#fff";
+            targetCtx.font = "600 11px Inter, ui-sans-serif, system-ui, sans-serif";
+            targetCtx.textAlign = "center";
+            targetCtx.fillText(tutorProfile.name || "Tutor", rect.left + rect.width / 2, rect.bottom - 14);
+            targetCtx.restore();
+        }
+
+        function paintRecordFrame() {
+            if (!recordCtx || !recordCanvas) return;
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            if (recordCanvas.width !== width || recordCanvas.height !== height) {
+                recordCanvas.width = width;
+                recordCanvas.height = height;
+            }
+            drawBoardBackground(recordCtx, width, height);
+            recordCtx.drawImage(canvas, 0, 0);
+            drawPipToRecord(recordCtx);
+            recordFrameId = requestAnimationFrame(paintRecordFrame);
+        }
+
+        function updateRecordButton() {
+            recordBtn.classList.toggle("is-recording", isRecording);
+            recordBtn.setAttribute("aria-pressed", isRecording ? "true" : "false");
+            recordBtn.title = isRecording ? "Stop recording" : "Start recording";
+        }
+
+        function downloadRecording(blob) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+            link.href = url;
+            link.download = `ilm-whiteboard-${stamp}.webm`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        async function startRecording() {
+            if (isRecording) return;
+            if (!tutorProfile.photo) {
+                window.alert("Add a tutor picture first so the news-reader PIP is included.");
+                openTutorSheet();
+                return;
+            }
+            if (typeof MediaRecorder === "undefined") {
+                window.alert("Recording is not supported in this browser.");
+                return;
+            }
+
+            recordCanvas = document.createElement("canvas");
+            recordCanvas.width = window.innerWidth;
+            recordCanvas.height = window.innerHeight;
+            recordCtx = recordCanvas.getContext("2d");
+            recordStream = recordCanvas.captureStream(30);
+            recordChunks = [];
+
+            const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+                ? "video/webm;codecs=vp9"
+                : MediaRecorder.isTypeSupported("video/webm;codecs=vp8")
+                    ? "video/webm;codecs=vp8"
+                    : "video/webm";
+
+            try {
+                mediaRecorder = new MediaRecorder(recordStream, { mimeType, videoBitsPerSecond: 2_500_000 });
+            } catch (error) {
+                mediaRecorder = new MediaRecorder(recordStream);
+            }
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data && event.data.size > 0) recordChunks.push(event.data);
+            };
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordChunks, { type: mediaRecorder.mimeType || "video/webm" });
+                downloadRecording(blob);
+                recordChunks = [];
+                if (recordFrameId) cancelAnimationFrame(recordFrameId);
+                recordFrameId = 0;
+                if (recordStream) {
+                    recordStream.getTracks().forEach((track) => track.stop());
+                    recordStream = null;
+                }
+                recordCanvas = null;
+                recordCtx = null;
+                mediaRecorder = null;
+            };
+
+            paintRecordFrame();
+            mediaRecorder.start(250);
+            isRecording = true;
+            updateRecordButton();
+        }
+
+        function stopRecording() {
+            if (!isRecording || !mediaRecorder) return;
+            isRecording = false;
+            updateRecordButton();
+            if (mediaRecorder.state !== "inactive") mediaRecorder.stop();
+        }
+
+        function toggleRecording() {
+            if (isRecording) stopRecording();
+            else startRecording();
+        }
+
         patternToggle.addEventListener("click", () => {
             const current = patternToggle.dataset.pattern || "grid";
             applyPattern(patterns[current].next);
             setOpenGroup(null);
+        });
+
+        tutorBtn.addEventListener("click", () => {
+            setOpenGroup(null);
+            openTutorSheet();
+        });
+
+        tutorCloseBtn.addEventListener("click", closeTutorSheet);
+        tutorSheet.addEventListener("click", (event) => {
+            if (event.target === tutorSheet) closeTutorSheet();
+        });
+        tutorUploadBtn.addEventListener("click", () => tutorPhotoInput.click());
+        tutorPhotoInput.addEventListener("change", () => {
+            const file = tutorPhotoInput.files && tutorPhotoInput.files[0];
+            tutorPhotoInput.value = "";
+            if (!file || !file.type.startsWith("image/")) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                tutorProfile.photo = String(reader.result || "");
+                syncTutorProfileUi();
+            };
+            reader.readAsDataURL(file);
+        });
+        tutorSaveBtn.addEventListener("click", () => {
+            tutorProfile.name = tutorNameInput.value.trim() || "Tutor";
+            saveTutorProfile();
+            syncTutorProfileUi();
+            closeTutorSheet();
+        });
+
+        newsPip.addEventListener("mousedown", startPipDrag);
+        window.addEventListener("mousemove", movePipDrag);
+        window.addEventListener("mouseup", stopPipDrag);
+        newsPip.addEventListener("touchstart", startPipDrag, { passive: false });
+        window.addEventListener("touchmove", movePipDrag, { passive: false });
+        window.addEventListener("touchend", stopPipDrag);
+
+        recordBtn.addEventListener("click", () => {
+            setOpenGroup(null);
+            toggleRecording();
         });
 
         document.getElementById("clearBoard").addEventListener("click", () => {
@@ -1294,6 +1795,11 @@
         });
 
         window.addEventListener("keydown", (event) => {
+            if (tutorSheet.classList.contains("is-open") && event.key === "Escape") {
+                event.preventDefault();
+                closeTutorSheet();
+                return;
+            }
             if (cameraSheet.classList.contains("is-open") && event.key === "Escape") {
                 event.preventDefault();
                 closeCamera();
@@ -1322,11 +1828,14 @@
         canvas.addEventListener("touchend", stopPointer);
         window.addEventListener("resize", resizeCanvas);
 
+        loadTutorProfile();
+        syncTutorProfileUi();
         resizeCanvas();
         applyPattern("grid");
         setOpenGroup(null);
         updateGroupPreviews();
         updateCursor();
+        updateRecordButton();
     </script>
 </body>
 </html>
