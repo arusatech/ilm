@@ -33,9 +33,16 @@
             background: var(--board);
         }
 
-        .board {
+        .board-scroll {
             position: fixed;
             inset: 0;
+            overflow: auto;
+            background: var(--board);
+            overscroll-behavior: contain;
+        }
+
+        .board {
+            position: relative;
             background-color: var(--board);
             transition: background-image 200ms ease;
         }
@@ -53,8 +60,10 @@
         }
 
         .ink {
-            position: fixed;
-            inset: 0;
+            position: absolute;
+            left: 0;
+            top: 0;
+            display: block;
             width: 100%;
             height: 100%;
             z-index: 1;
@@ -77,6 +86,14 @@
 
         .ink.is-dragging {
             cursor: grabbing;
+        }
+
+        .ink.is-resize-nwse {
+            cursor: nwse-resize;
+        }
+
+        .ink.is-resize-nesw {
+            cursor: nesw-resize;
         }
 
         .text-editor {
@@ -438,6 +455,10 @@
             padding: 0.5rem;
         }
 
+        .tutor-avatar[hidden] {
+            display: none !important;
+        }
+
         .sheet-field {
             display: grid;
             gap: 0.35rem;
@@ -531,11 +552,209 @@
             text-align: center;
             pointer-events: none;
         }
+
+        .studio-sheet {
+            z-index: 46;
+        }
+
+        .studio-card {
+            display: grid;
+            gap: 0.85rem;
+            width: min(100%, 60rem);
+            max-height: min(92vh, 52rem);
+            overflow: auto;
+            padding: 1rem 1.1rem 0.9rem;
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            border-radius: 1rem;
+            background: #fff;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+        }
+
+        .studio-card h2 {
+            margin: 0;
+            font-size: 1.05rem;
+        }
+
+        .studio-lead {
+            margin: 0.3rem 0 0;
+            color: var(--muted);
+            font-size: 0.82rem;
+            line-height: 1.45;
+        }
+
+        .studio-stage {
+            display: grid;
+            place-items: center;
+            min-height: 16rem;
+            padding: 0.75rem;
+            border: 1px solid var(--line);
+            border-radius: 0.9rem;
+            background: #f8fafc;
+        }
+
+        .studio-empty {
+            margin: 0;
+            max-width: 18rem;
+            color: var(--muted);
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .studio-picture {
+            position: relative;
+            display: inline-block;
+            max-width: 100%;
+            line-height: 0;
+        }
+
+        #studioPreview {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.45rem;
+        }
+
+        .studio-picture[hidden],
+        .studio-empty[hidden],
+        .studio-bg-icon[hidden] {
+            display: none !important;
+        }
+
+        .studio-bg-icon {
+            position: absolute;
+            top: 0.55rem;
+            right: 0.55rem;
+            display: grid;
+            place-items: center;
+            width: 2.35rem;
+            height: 2.35rem;
+            padding: 0;
+            border: 0;
+            border-radius: 999px;
+            background: #fff;
+            color: var(--accent);
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.24);
+            cursor: pointer;
+        }
+
+        .studio-bg-icon svg {
+            width: 1.15rem;
+            height: 1.15rem;
+        }
+
+        .studio-bg-icon:hover {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .studio-bg-icon:disabled {
+            opacity: 0.55;
+            cursor: default;
+        }
+
+        .studio-status {
+            margin: 0.55rem 0 0;
+            color: var(--muted);
+            font-size: 0.78rem;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        .studio-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 0.4rem;
+        }
+
+        .studio-actions button {
+            border: 0;
+            border-radius: 0.7rem;
+            padding: 0.5rem 0.75rem;
+            font: 600 0.78rem Inter, ui-sans-serif, system-ui, sans-serif;
+            cursor: pointer;
+        }
+
+        .studio-actions button:disabled {
+            opacity: 0.45;
+            cursor: default;
+        }
+
+        .studio-library {
+            display: grid;
+            gap: 0.45rem;
+        }
+
+        .studio-library-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .studio-library-head span {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .studio-thumbs {
+            display: flex;
+            gap: 0.45rem;
+            overflow-x: auto;
+            padding-bottom: 0.15rem;
+        }
+
+        .studio-library-empty {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.78rem;
+        }
+
+        .studio-thumb {
+            display: grid;
+            gap: 0.25rem;
+            flex: 0 0 4.6rem;
+            width: 4.6rem;
+            padding: 0.3rem;
+            border: 1px solid var(--line);
+            border-radius: 0.65rem;
+            background: #fff;
+            color: inherit;
+            font: inherit;
+            cursor: pointer;
+        }
+
+        .studio-thumb.is-active {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-soft);
+        }
+
+        .studio-thumb img {
+            width: 100%;
+            height: 3.2rem;
+            object-fit: cover;
+            border-radius: 0.4rem;
+            background: #e2e8f0;
+        }
+
+        .studio-thumb span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
-    <main id="board" class="board board-grid" aria-label="Whiteboard"></main>
-    <canvas id="ink" class="ink is-move" aria-label="Drawing layer"></canvas>
+    <div id="boardScroll" class="board-scroll">
+        <main id="board" class="board board-grid" aria-label="Whiteboard">
+            <canvas id="ink" class="ink is-move" aria-label="Drawing layer"></canvas>
+        </main>
+    </div>
     <input id="imageFileInput" type="file" accept="image/*" hidden>
     <input id="tutorPhotoInput" type="file" accept="image/*" hidden>
 
@@ -549,7 +768,7 @@
             <h2>Tutor profile</h2>
             <div class="tutor-avatar-wrap">
                 <div id="tutorAvatarEmpty" class="tutor-avatar is-empty">Upload photo</div>
-                <img id="tutorAvatarImage" class="tutor-avatar" alt="Tutor photo" hidden>
+                <img id="tutorAvatarImage" class="tutor-avatar" alt="" hidden>
             </div>
             <div class="sheet-field">
                 <label for="tutorNameInput">Display name</label>
@@ -569,6 +788,38 @@
             <div class="camera-actions">
                 <button id="cameraCancel" class="camera-cancel" type="button">Cancel</button>
                 <button id="cameraShot" class="camera-shot" type="button">Capture</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="studioSheet" class="sheet studio-sheet" aria-hidden="true">
+        <div class="studio-card" role="dialog" aria-labelledby="studioTitle" tabindex="-1">
+            <header>
+                <h2 id="studioTitle">Image library</h2>
+                <p class="studio-lead">Click the icon on the picture to remove its background.</p>
+            </header>
+            <div class="studio-stage">
+                <div>
+                    <p id="studioEmpty" class="studio-empty">Add an image, then click the icon on it to remove the background.</p>
+                    <div id="studioPicture" class="studio-picture" hidden>
+                        <canvas id="studioPreview"></canvas>
+                        <button id="studioRemoveBg" class="studio-bg-icon" type="button" title="Remove background" aria-label="Remove background">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/><path d="M16 3v4"/><path d="M14 5h4"/></svg>
+                        </button>
+                    </div>
+                    <p id="studioStatus" class="studio-status"></p>
+                </div>
+            </div>
+            <div class="studio-actions">
+                <button id="studioPlace" class="btn-primary" type="button" disabled>Place on board</button>
+                <button id="studioClose" class="btn-muted" type="button">Close</button>
+            </div>
+            <div class="studio-library">
+                <div class="studio-library-head">
+                    <span>Library</span>
+                    <button id="studioAdd" class="btn-muted" type="button">Add image</button>
+                </div>
+                <div id="studioLibrary" class="studio-thumbs"></div>
             </div>
         </div>
     </div>
@@ -653,8 +904,11 @@
                 <button class="tool" type="button" data-gallery="camera" title="Camera capture">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
                 </button>
-                <button class="tool" type="button" data-gallery="image" title="Load image file">
+                <button class="tool" type="button" data-gallery="image" title="Add image to library">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                </button>
+                <button class="tool" type="button" data-gallery="library" title="Image library">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 10 5-10 5L2 7l10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
                 </button>
             </div>
         </section>
@@ -675,6 +929,7 @@
         const MOVABLE = new Set(["rect", "ellipse", "diamond", "arrow", "larrow", "darrow", "text", "stroke", "image"]);
         const DIAGRAM_TOOLS = new Set(["ellipse", "rect", "diamond", "arrow", "larrow", "darrow"]);
 
+        const boardScroll = document.getElementById("boardScroll");
         const board = document.getElementById("board");
         const canvas = document.getElementById("ink");
         const ctx = canvas.getContext("2d");
@@ -703,6 +958,17 @@
         const cameraVideo = document.getElementById("cameraVideo");
         const cameraCancel = document.getElementById("cameraCancel");
         const cameraShot = document.getElementById("cameraShot");
+        const studioSheet = document.getElementById("studioSheet");
+        const studioCard = studioSheet.querySelector(".studio-card");
+        const studioPicture = document.getElementById("studioPicture");
+        const studioPreview = document.getElementById("studioPreview");
+        const studioEmpty = document.getElementById("studioEmpty");
+        const studioStatus = document.getElementById("studioStatus");
+        const studioRemoveBg = document.getElementById("studioRemoveBg");
+        const studioPlace = document.getElementById("studioPlace");
+        const studioClose = document.getElementById("studioClose");
+        const studioAdd = document.getElementById("studioAdd");
+        const studioLibrary = document.getElementById("studioLibrary");
         const TUTOR_STORAGE_KEY = "ilm-tutor-profile";
 
         const patterns = {
@@ -723,6 +989,16 @@
         const scene = [];
         let diagramChoice = "ellipse";
         let galleryChoice = "image";
+        let librarySeq = 1;
+        const libraryItems = [];
+        const studio = {
+            source: null,
+            name: "",
+            libraryId: null,
+            cutout: null,
+            applied: false,
+            working: false
+        };
         let currentTool = "select";
         let currentColor = "#2563eb";
         let openGroupName = null;
@@ -730,6 +1006,7 @@
         let textEditor = null;
         let selectedIndex = -1;
         let dragState = null;
+        let hoverHandle = null;
         let cameraStream = null;
         let tutorProfile = { name: "Tutor", photo: "" };
         let pipDrag = null;
@@ -740,18 +1017,76 @@
         let recordCtx = null;
         let recordStream = null;
         let recordFrameId = 0;
+        let boardWidth = 0;
+        let boardHeight = 0;
 
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+        function viewSize() {
+            return {
+                w: boardScroll.clientWidth || window.innerWidth,
+                h: boardScroll.clientHeight || window.innerHeight
+            };
+        }
+
+        function sceneExtent() {
+            let maxX = 0;
+            let maxY = 0;
+            const include = (item) => {
+                if (!item) return;
+                const box = itemBounds(item);
+                maxX = Math.max(maxX, box.x + box.w);
+                maxY = Math.max(maxY, box.y + box.h);
+            };
+            scene.forEach(include);
+            include(draft);
+            return { maxX, maxY };
+        }
+
+        function applyBoardSize(width, height) {
+            const nextW = Math.max(1, Math.round(width));
+            const nextH = Math.max(1, Math.round(height));
+            if (nextW === boardWidth && nextH === boardHeight && canvas.width === nextW && canvas.height === nextH) return;
+            boardWidth = nextW;
+            boardHeight = nextH;
+            board.style.width = `${nextW}px`;
+            board.style.height = `${nextH}px`;
+            canvas.width = nextW;
+            canvas.height = nextH;
             redraw();
         }
 
+        function growBoard() {
+            const view = viewSize();
+            const extent = sceneExtent();
+            const neededW = Math.max(view.w, extent.maxX + 240);
+            const neededH = Math.max(view.h, extent.maxY + 240);
+            let width = Math.max(boardWidth, view.w);
+            let height = Math.max(boardHeight, view.h);
+            if (neededW > width) width = Math.max(neededW, width + 480);
+            if (neededH > height) height = Math.max(neededH, height + 480);
+            applyBoardSize(width, height);
+        }
+
+        function fitBoard() {
+            const view = viewSize();
+            const extent = sceneExtent();
+            applyBoardSize(
+                Math.max(view.w, extent.maxX + 80),
+                Math.max(view.h, extent.maxY + 80)
+            );
+        }
+
+        function resizeCanvas() {
+            fitBoard();
+        }
+
         function updateCursor() {
+            const handle = dragState && dragState.mode === "resize" ? dragState.handle : hoverHandle;
             canvas.classList.toggle("is-draw", FREEHAND.has(currentTool) || SHAPES.has(currentTool));
             canvas.classList.toggle("is-text", currentTool === "text");
-            canvas.classList.toggle("is-move", currentTool === "select" && !dragState);
-            canvas.classList.toggle("is-dragging", Boolean(dragState));
+            canvas.classList.toggle("is-resize-nwse", handle === "nw" || handle === "se");
+            canvas.classList.toggle("is-resize-nesw", handle === "ne" || handle === "sw");
+            canvas.classList.toggle("is-move", currentTool === "select" && !dragState && !handle);
+            canvas.classList.toggle("is-dragging", Boolean(dragState) && dragState.mode !== "resize");
         }
 
         function setOpenGroup(name) {
@@ -1009,6 +1344,299 @@
             item.y2 += dy;
         }
 
+        function colorDistance(data, index, rgb) {
+            const p = index * 4;
+            const dr = data[p] - rgb[0];
+            const dg = data[p + 1] - rgb[1];
+            const db = data[p + 2] - rgb[2];
+            return dr * dr + dg * dg + db * db;
+        }
+
+        function borderMedian(data, width, height) {
+            const reds = [];
+            const greens = [];
+            const blues = [];
+            const push = (index) => {
+                const p = index * 4;
+                reds.push(data[p]);
+                greens.push(data[p + 1]);
+                blues.push(data[p + 2]);
+            };
+            for (let x = 0; x < width; x += 1) {
+                push(x);
+                push((height - 1) * width + x);
+            }
+            for (let y = 1; y < height - 1; y += 1) {
+                push(y * width);
+                push(y * width + width - 1);
+            }
+            const mid = (values) => values.slice().sort((a, b) => a - b)[values.length >> 1];
+            return [mid(reds), mid(greens), mid(blues)];
+        }
+
+        function backgroundMask(data, width, height) {
+            const count = width * height;
+            const median = borderMedian(data, width, height);
+            let threshold = 46;
+            let mask = new Uint8Array(count);
+            for (let attempt = 0; attempt < 6; attempt += 1) {
+                mask = new Uint8Array(count);
+                let background = 0;
+                const limit = threshold * threshold;
+                for (let index = 0; index < count; index += 1) {
+                    if (colorDistance(data, index, median) <= limit) {
+                        mask[index] = 1;
+                        background += 1;
+                    }
+                }
+                const ratio = background / count;
+                if (ratio > 0.9 && attempt < 5) threshold *= 0.75;
+                else if (ratio < 0.06 && attempt < 5) threshold *= 1.32;
+                else break;
+            }
+
+            const connected = new Uint8Array(count);
+            const stack = [];
+            const seed = (index) => {
+                if (!mask[index] || connected[index]) return;
+                connected[index] = 1;
+                stack.push(index);
+            };
+            for (let x = 0; x < width; x += 1) {
+                seed(x);
+                seed((height - 1) * width + x);
+            }
+            for (let y = 1; y < height - 1; y += 1) {
+                seed(y * width);
+                seed(y * width + width - 1);
+            }
+            while (stack.length) {
+                const index = stack.pop();
+                const x = index % width;
+                const y = (index / width) | 0;
+                if (x > 0) seed(index - 1);
+                if (x + 1 < width) seed(index + 1);
+                if (y > 0) seed(index - width);
+                if (y + 1 < height) seed(index + width);
+            }
+            return connected;
+        }
+
+        function shortImageName(name) {
+            const base = String(name || "Image").replace(/\.[a-z0-9]+$/i, "");
+            return base.length > 28 ? `${base.slice(0, 27)}…` : base;
+        }
+
+        function makeLibraryThumb(image) {
+            const thumb = document.createElement("canvas");
+            const sourceWidth = image.naturalWidth || image.width;
+            const sourceHeight = image.naturalHeight || image.height;
+            const scale = 96 / Math.max(sourceWidth, sourceHeight, 1);
+            thumb.width = Math.max(1, Math.round(sourceWidth * scale));
+            thumb.height = Math.max(1, Math.round(sourceHeight * scale));
+            thumb.getContext("2d").drawImage(image, 0, 0, thumb.width, thumb.height);
+            return thumb.toDataURL("image/jpeg", 0.72);
+        }
+
+        function rememberLibraryImage(image, name) {
+            const item = {
+                id: librarySeq,
+                name: name || "Image",
+                thumb: makeLibraryThumb(image),
+                source: image
+            };
+            librarySeq += 1;
+            libraryItems.unshift(item);
+            if (libraryItems.length > 16) libraryItems.pop();
+            return item.id;
+        }
+
+        function drawChecker(context, width, height) {
+            const size = 12;
+            for (let y = 0; y < height; y += size) {
+                for (let x = 0; x < width; x += size) {
+                    const on = ((x / size) + (y / size)) % 2 === 0;
+                    context.fillStyle = on ? "#e2e8f0" : "#ffffff";
+                    context.fillRect(x, y, size, size);
+                }
+            }
+        }
+
+        function renderStudio() {
+            if (!studio.source) {
+                studioPicture.hidden = true;
+                studioEmpty.hidden = false;
+                studioStatus.textContent = "";
+                return;
+            }
+            const source = studio.applied && studio.cutout ? studio.cutout : studio.source;
+            const sourceWidth = source.naturalWidth || source.width;
+            const sourceHeight = source.naturalHeight || source.height;
+            const fit = Math.min(720 / sourceWidth, 520 / sourceHeight, 1);
+            const destWidth = Math.max(1, Math.round(sourceWidth * fit));
+            const destHeight = Math.max(1, Math.round(sourceHeight * fit));
+            studioPicture.hidden = false;
+            studioEmpty.hidden = true;
+            studioPreview.width = destWidth;
+            studioPreview.height = destHeight;
+            const view = studioPreview.getContext("2d");
+            if (studio.applied) drawChecker(view, destWidth, destHeight);
+            view.drawImage(source, 0, 0, destWidth, destHeight);
+            if (studio.working) studioStatus.textContent = "Removing background…";
+            else if (studio.applied) studioStatus.textContent = "Background removed.";
+            else studioStatus.textContent = "Click the icon on the image to remove the background.";
+        }
+
+        function renderLibraryStrip() {
+            studioLibrary.innerHTML = "";
+            if (!libraryItems.length) {
+                const empty = document.createElement("p");
+                empty.className = "studio-library-empty";
+                empty.textContent = "No images yet.";
+                studioLibrary.appendChild(empty);
+                return;
+            }
+            libraryItems.forEach((item) => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = `studio-thumb${item.id === studio.libraryId ? " is-active" : ""}`;
+                button.title = item.name;
+                const img = document.createElement("img");
+                img.alt = "";
+                img.src = item.thumb;
+                const label = document.createElement("span");
+                label.textContent = shortImageName(item.name);
+                button.append(img, label);
+                button.addEventListener("click", () => openImageStudio(item.source, item.name, item.id));
+                studioLibrary.appendChild(button);
+            });
+        }
+
+        function updateStudioControls() {
+            const ready = Boolean(studio.source) && !studio.working;
+            studioPlace.disabled = !ready;
+            studioPlace.textContent = studio.applied ? "Place cutout" : "Place on board";
+            studioRemoveBg.hidden = !studio.source || studio.applied;
+            studioRemoveBg.disabled = !studio.source || studio.working || studio.applied;
+        }
+
+        function showImageStudio() {
+            studioSheet.classList.add("is-open");
+            studioSheet.setAttribute("aria-hidden", "false");
+            studioCard.focus();
+        }
+
+        function closeImageStudio() {
+            studioSheet.classList.remove("is-open");
+            studioSheet.setAttribute("aria-hidden", "true");
+        }
+
+        function openImageLibrary() {
+            showImageStudio();
+            if (!studio.source && libraryItems.length) {
+                const item = libraryItems[0];
+                openImageStudio(item.source, item.name, item.id);
+                return;
+            }
+            renderStudio();
+            renderLibraryStrip();
+            updateStudioControls();
+        }
+
+        function openImageStudio(image, name, libraryId) {
+            const id = libraryId == null ? rememberLibraryImage(image, name) : libraryId;
+            studio.source = image;
+            studio.name = name || "Image";
+            studio.libraryId = id;
+            studio.cutout = null;
+            studio.applied = false;
+            studio.working = false;
+            showImageStudio();
+            renderStudio();
+            renderLibraryStrip();
+            updateStudioControls();
+        }
+
+        function removeBackground(source) {
+            const sourceWidth = source.naturalWidth || source.width;
+            const sourceHeight = source.naturalHeight || source.height;
+            const limit = 1600;
+            const scale = Math.min(1, limit / Math.max(sourceWidth, sourceHeight, 1));
+            const width = Math.max(1, Math.round(sourceWidth * scale));
+            const height = Math.max(1, Math.round(sourceHeight * scale));
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            const context = canvas.getContext("2d", { willReadFrequently: true });
+            context.drawImage(source, 0, 0, width, height);
+
+            const analysisScale = Math.min(1, 480 / Math.max(width, height));
+            const aw = Math.max(8, Math.round(width * analysisScale));
+            const ah = Math.max(8, Math.round(height * analysisScale));
+            const scratch = document.createElement("canvas");
+            scratch.width = aw;
+            scratch.height = ah;
+            const scratchCtx = scratch.getContext("2d", { willReadFrequently: true });
+            scratchCtx.drawImage(canvas, 0, 0, aw, ah);
+            const sample = scratchCtx.getImageData(0, 0, aw, ah);
+            const mask = backgroundMask(sample.data, aw, ah);
+            const frame = context.getImageData(0, 0, width, height);
+            const pixels = frame.data;
+            const foregroundAt = (x, y) => {
+                if (x < 0 || y < 0 || x >= aw || y >= ah) return 0;
+                return mask[y * aw + x] ? 0 : 1;
+            };
+            for (let y = 0; y < height; y += 1) {
+                const fy = ((y + 0.5) * ah / height) - 0.5;
+                const y0 = Math.floor(fy);
+                const ty = fy - y0;
+                for (let x = 0; x < width; x += 1) {
+                    const fx = ((x + 0.5) * aw / width) - 0.5;
+                    const x0 = Math.floor(fx);
+                    const tx = fx - x0;
+                    const cover =
+                        foregroundAt(x0, y0) * (1 - tx) * (1 - ty) +
+                        foregroundAt(x0 + 1, y0) * tx * (1 - ty) +
+                        foregroundAt(x0, y0 + 1) * (1 - tx) * ty +
+                        foregroundAt(x0 + 1, y0 + 1) * tx * ty;
+                    const p = (y * width + x) * 4;
+                    pixels[p + 3] = Math.round(pixels[p + 3] * cover);
+                }
+            }
+            context.putImageData(frame, 0, 0);
+            return canvas;
+        }
+
+        function requestCutout() {
+            if (!studio.source || studio.applied || studio.working) return;
+            studio.working = true;
+            updateStudioControls();
+            renderStudio();
+            requestAnimationFrame(() => {
+                if (!studio.source) return;
+                studio.cutout = removeBackground(studio.source);
+                studio.applied = true;
+                studio.working = false;
+                renderStudio();
+                updateStudioControls();
+            });
+        }
+
+        function snapshotCanvas(source) {
+            const copy = document.createElement("canvas");
+            copy.width = source.width;
+            copy.height = source.height;
+            copy.getContext("2d").drawImage(source, 0, 0);
+            return copy;
+        }
+
+        function placeStudioResult() {
+            if (!studio.source || studio.working) return;
+            const source = studio.applied && studio.cutout ? snapshotCanvas(studio.cutout) : studio.source;
+            placeImageOnBoard(source, source.naturalWidth || source.width, source.naturalHeight || source.height);
+            closeImageStudio();
+        }
+
         function fitImageSize(naturalWidth, naturalHeight, maxSize = 320) {
             const scale = Math.min(1, maxSize / Math.max(naturalWidth, naturalHeight, 1));
             return {
@@ -1019,10 +1647,11 @@
 
         function placeImageOnBoard(source, naturalWidth, naturalHeight) {
             const size = fitImageSize(naturalWidth, naturalHeight);
+            const view = viewSize();
             const item = {
                 kind: "image",
-                x: Math.round((canvas.width - size.w) / 2),
-                y: Math.round((canvas.height - size.h) / 2),
+                x: Math.round(boardScroll.scrollLeft + (view.w - size.w) / 2),
+                y: Math.round(boardScroll.scrollTop + (view.h - size.h) / 2),
                 w: size.w,
                 h: size.h,
                 source
@@ -1031,7 +1660,7 @@
             selectedIndex = scene.length - 1;
             setTool("select");
             setOpenGroup(null);
-            redraw();
+            fitBoard();
         }
 
         function loadImageFromUrl(url) {
@@ -1048,7 +1677,7 @@
             const url = URL.createObjectURL(file);
             try {
                 const image = await loadImageFromUrl(url);
-                placeImageOnBoard(image, image.naturalWidth, image.naturalHeight);
+                openImageStudio(image, file.name || "Image", null);
             } catch (error) {
                 URL.revokeObjectURL(url);
                 window.alert("Could not load that image file.");
@@ -1091,8 +1720,8 @@
             shot.getContext("2d").drawImage(cameraVideo, 0, 0);
             const image = new Image();
             image.onload = () => {
-                placeImageOnBoard(image, image.naturalWidth, image.naturalHeight);
                 closeCamera();
+                openImageStudio(image, "Camera", null);
             };
             image.src = shot.toDataURL("image/jpeg", 0.92);
         }
@@ -1250,8 +1879,55 @@
             });
         }
 
+        function imageHandles(item) {
+            return [
+                { name: "nw", x: item.x, y: item.y },
+                { name: "ne", x: item.x + item.w, y: item.y },
+                { name: "sw", x: item.x, y: item.y + item.h },
+                { name: "se", x: item.x + item.w, y: item.y + item.h }
+            ];
+        }
+
+        function hitImageHandle(item, point) {
+            if (!item || item.kind !== "image") return null;
+            for (const handle of imageHandles(item)) {
+                if (Math.abs(point.x - handle.x) <= 12 && Math.abs(point.y - handle.y) <= 12) return handle.name;
+            }
+            return null;
+        }
+
+        function resizeDragFor(item, handle) {
+            return {
+                mode: "resize",
+                index: selectedIndex,
+                handle,
+                originX: item.x,
+                originY: item.y,
+                originW: item.w,
+                originH: item.h
+            };
+        }
+
+        function applyImageResize(item, drag, point) {
+            const signX = drag.handle === "ne" || drag.handle === "se" ? 1 : -1;
+            const signY = drag.handle === "sw" || drag.handle === "se" ? 1 : -1;
+            const anchorX = signX > 0 ? drag.originX : drag.originX + drag.originW;
+            const anchorY = signY > 0 ? drag.originY : drag.originY + drag.originH;
+            const vx = signX * drag.originW;
+            const vy = signY * drag.originH;
+            const len2 = vx * vx + vy * vy || 1;
+            const minScale = 32 / Math.min(drag.originW, drag.originH);
+            const scale = Math.max(minScale, ((point.x - anchorX) * vx + (point.y - anchorY) * vy) / len2);
+            item.w = drag.originW * scale;
+            item.h = drag.originH * scale;
+            item.x = signX > 0 ? anchorX : anchorX - item.w;
+            item.y = signY > 0 ? anchorY : anchorY - item.h;
+        }
+
         function paintSelection(item) {
-            const box = itemBounds(item);
+            const box = item.kind === "image"
+                ? { x: item.x, y: item.y, w: item.w, h: item.h }
+                : itemBounds(item);
             ctx.save();
             ctx.globalCompositeOperation = "source-over";
             ctx.strokeStyle = "#4f46e5";
@@ -1260,14 +1936,16 @@
             ctx.strokeRect(box.x, box.y, box.w, box.h);
             ctx.setLineDash([]);
             ctx.fillStyle = "#4f46e5";
-            const handles = [
-                [box.x, box.y],
-                [box.x + box.w, box.y],
-                [box.x, box.y + box.h],
-                [box.x + box.w, box.y + box.h]
-            ];
+            const handles = item.kind === "image"
+                ? imageHandles(item).map((handle) => [handle.x, handle.y])
+                : [
+                    [box.x, box.y],
+                    [box.x + box.w, box.y],
+                    [box.x, box.y + box.h],
+                    [box.x + box.w, box.y + box.h]
+                ];
             handles.forEach(([x, y]) => {
-                ctx.fillRect(x - 3.5, y - 3.5, 7, 7);
+                ctx.fillRect(x - 4, y - 4, 8, 8);
             });
             ctx.restore();
         }
@@ -1308,7 +1986,7 @@
             if (!value) return;
             scene.push({ kind: "text", text: value, x, y, color, size: 16 });
             selectedIndex = scene.length - 1;
-            redraw();
+            fitBoard();
         }
 
         function openTextEditor(point) {
@@ -1321,8 +1999,9 @@
             textEditor.dataset.x = String(point.x);
             textEditor.dataset.y = String(point.y);
             textEditor.dataset.color = currentColor;
-            textEditor.style.left = `${point.x}px`;
-            textEditor.style.top = `${point.y}px`;
+            const screen = canvas.getBoundingClientRect();
+            textEditor.style.left = `${screen.left + point.x}px`;
+            textEditor.style.top = `${screen.top + point.y}px`;
             textEditor.style.color = currentColor;
             document.body.appendChild(textEditor);
             textEditor.focus();
@@ -1349,16 +2028,31 @@
             const point = pointFromEvent(event);
 
             if (currentTool === "select") {
+                const selected = selectedIndex >= 0 ? scene[selectedIndex] : null;
+                const selectedHandle = hitImageHandle(selected, point);
+                if (selectedHandle) {
+                    dragState = resizeDragFor(selected, selectedHandle);
+                    hoverHandle = selectedHandle;
+                    updateCursor();
+                    redraw();
+                    return;
+                }
+
                 const hit = hitTest(point);
                 selectedIndex = hit;
+                hoverHandle = null;
                 if (hit >= 0) {
-                    dragState = {
-                        index: hit,
-                        lastX: point.x,
-                        lastY: point.y
-                    };
-                    updateCursor();
+                    const item = scene[hit];
+                    const handle = hitImageHandle(item, point);
+                    dragState = handle
+                        ? resizeDragFor(item, handle)
+                        : { mode: "move", index: hit, lastX: point.x, lastY: point.y };
+                    hoverHandle = handle;
+                } else {
+                    const client = event.touches ? event.touches[0] : event;
+                    dragState = { mode: "pan", lastX: client.clientX, lastY: client.clientY };
                 }
+                updateCursor();
                 redraw();
                 return;
             }
@@ -1395,13 +2089,35 @@
         function movePointer(event) {
             const point = pointFromEvent(event);
 
+            if (!dragState && currentTool === "select") {
+                const selected = selectedIndex >= 0 ? scene[selectedIndex] : null;
+                const handle = hitImageHandle(selected, point);
+                if (handle !== hoverHandle) {
+                    hoverHandle = handle;
+                    updateCursor();
+                }
+            }
+
             if (dragState) {
                 event.preventDefault();
                 const item = scene[dragState.index];
-                if (item) {
+                if (dragState.mode === "pan") {
+                    const client = event.touches ? event.touches[0] : event;
+                    boardScroll.scrollLeft -= client.clientX - dragState.lastX;
+                    boardScroll.scrollTop -= client.clientY - dragState.lastY;
+                    dragState.lastX = client.clientX;
+                    dragState.lastY = client.clientY;
+                    return;
+                }
+                if (item && dragState.mode === "resize") {
+                    applyImageResize(item, dragState, point);
+                    growBoard();
+                    redraw();
+                } else if (item) {
                     moveItem(item, point.x - dragState.lastX, point.y - dragState.lastY);
                     dragState.lastX = point.x;
                     dragState.lastY = point.y;
+                    growBoard();
                     redraw();
                 }
                 return;
@@ -1417,14 +2133,18 @@
                 draft.y2 = point.y;
             }
 
+            growBoard();
             redraw();
         }
 
         function stopPointer() {
             if (dragState) {
+                const panning = dragState.mode === "pan";
                 dragState = null;
+                hoverHandle = null;
                 updateCursor();
-                redraw();
+                if (panning) redraw();
+                else fitBoard();
                 return;
             }
 
@@ -1451,7 +2171,7 @@
             }
 
             draft = null;
-            redraw();
+            fitBoard();
         }
 
         toolGroups.forEach((group) => {
@@ -1484,6 +2204,7 @@
                 setOpenGroup("gallery");
                 if (galleryChoice === "image") imageFileInput.click();
                 if (galleryChoice === "camera") openCamera();
+                if (galleryChoice === "library") openImageLibrary();
             });
         });
 
@@ -1521,15 +2242,15 @@
             tutorNameInput.value = tutorProfile.name || "";
             newsPipLabel.textContent = tutorProfile.name || "Tutor";
             if (tutorProfile.photo) {
-                tutorAvatarImage.src = tutorProfile.photo;
-                tutorAvatarImage.hidden = false;
                 tutorAvatarEmpty.hidden = true;
+                tutorAvatarImage.hidden = false;
+                tutorAvatarImage.src = tutorProfile.photo;
                 newsPipImage.src = tutorProfile.photo;
                 newsPip.classList.add("is-visible");
             } else {
-                tutorAvatarImage.removeAttribute("src");
-                tutorAvatarImage.hidden = true;
                 tutorAvatarEmpty.hidden = false;
+                tutorAvatarImage.hidden = true;
+                tutorAvatarImage.removeAttribute("src");
                 newsPipImage.removeAttribute("src");
                 newsPip.classList.remove("is-visible");
             }
@@ -1583,29 +2304,35 @@
             newsPip.classList.remove("is-dragging");
         }
 
-        function drawBoardBackground(targetCtx, width, height) {
+        function drawBoardBackground(targetCtx, width, height, originX = 0, originY = 0) {
             targetCtx.fillStyle = "#f8fafc";
             targetCtx.fillRect(0, 0, width, height);
 
             if (board.classList.contains("board-grid")) {
+                const size = 30;
+                const startX = -((originX % size) + size) % size;
+                const startY = -((originY % size) + size) % size;
                 targetCtx.strokeStyle = "rgba(200, 200, 220, 0.45)";
                 targetCtx.lineWidth = 1;
-                for (let x = 0; x <= width; x += 30) {
+                for (let x = startX; x <= width; x += size) {
                     targetCtx.beginPath();
                     targetCtx.moveTo(x + 0.5, 0);
                     targetCtx.lineTo(x + 0.5, height);
                     targetCtx.stroke();
                 }
-                for (let y = 0; y <= height; y += 30) {
+                for (let y = startY; y <= height; y += size) {
                     targetCtx.beginPath();
                     targetCtx.moveTo(0, y + 0.5);
                     targetCtx.lineTo(width, y + 0.5);
                     targetCtx.stroke();
                 }
             } else if (board.classList.contains("board-dots")) {
+                const size = 24;
+                const startX = ((size - (originX % size)) + size) % size;
+                const startY = ((size - (originY % size)) + size) % size;
                 targetCtx.fillStyle = "rgba(150, 150, 180, 0.45)";
-                for (let x = 12; x <= width; x += 24) {
-                    for (let y = 12; y <= height; y += 24) {
+                for (let x = startX; x <= width; x += size) {
+                    for (let y = startY; y <= height; y += size) {
                         targetCtx.beginPath();
                         targetCtx.arc(x, y, 1.5, 0, Math.PI * 2);
                         targetCtx.fill();
@@ -1649,8 +2376,12 @@
                 recordCanvas.width = width;
                 recordCanvas.height = height;
             }
-            drawBoardBackground(recordCtx, width, height);
-            recordCtx.drawImage(canvas, 0, 0);
+            const viewX = Math.min(boardScroll.scrollLeft, Math.max(0, canvas.width - 1));
+            const viewY = Math.min(boardScroll.scrollTop, Math.max(0, canvas.height - 1));
+            const viewW = Math.max(1, Math.min(boardScroll.clientWidth, canvas.width - viewX));
+            const viewH = Math.max(1, Math.min(boardScroll.clientHeight, canvas.height - viewY));
+            drawBoardBackground(recordCtx, width, height, viewX, viewY);
+            recordCtx.drawImage(canvas, viewX, viewY, viewW, viewH, 0, 0, width, height);
             drawPipToRecord(recordCtx);
             recordFrameId = requestAnimationFrame(paintRecordFrame);
         }
@@ -1791,10 +2522,34 @@
             draft = null;
             selectedIndex = -1;
             dragState = null;
-            redraw();
+            boardScroll.scrollLeft = 0;
+            boardScroll.scrollTop = 0;
+            fitBoard();
+        });
+
+        studioRemoveBg.addEventListener("click", (event) => {
+            event.stopPropagation();
+            requestCutout();
+        });
+        studioPlace.addEventListener("click", (event) => {
+            event.stopPropagation();
+            setTimeout(placeStudioResult, 0);
+        });
+        studioClose.addEventListener("click", (event) => {
+            event.stopPropagation();
+            setTimeout(closeImageStudio, 0);
+        });
+        studioAdd.addEventListener("click", () => imageFileInput.click());
+        studioSheet.addEventListener("click", (event) => {
+            if (event.target === studioSheet) closeImageStudio();
         });
 
         window.addEventListener("keydown", (event) => {
+            if (studioSheet.classList.contains("is-open") && event.key === "Escape") {
+                event.preventDefault();
+                closeImageStudio();
+                return;
+            }
             if (tutorSheet.classList.contains("is-open") && event.key === "Escape") {
                 event.preventDefault();
                 closeTutorSheet();
@@ -1810,7 +2565,7 @@
                 event.preventDefault();
                 scene.splice(selectedIndex, 1);
                 selectedIndex = -1;
-                redraw();
+                fitBoard();
             }
             if (event.key === "Escape") {
                 selectedIndex = -1;
