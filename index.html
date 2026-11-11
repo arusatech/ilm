@@ -430,14 +430,20 @@
 
         .tutor-avatar[hidden],
         .tutor-face[hidden],
+        .tutor-face-photo[hidden],
+        .tutor-face-video[hidden],
+        .tutor-live-canvas[hidden],
+        .tutor-lips[hidden],
         .tutor-photo-menu[hidden],
         .tutor-place-hint[hidden],
-        .tutor-photo-change[hidden] {
+        .tutor-photo-change[hidden],
+        .tutor-bg-field[hidden],
+        .tutor-live-badge[hidden] {
             display: none !important;
         }
 
         .tutor-card {
-            width: min(100%, 22rem);
+            width: min(100%, 24rem);
         }
 
         .tutor-lead,
@@ -519,12 +525,78 @@
             user-select: none;
         }
 
-        .tutor-face-photo {
+        .tutor-face-photo,
+        .tutor-face-video,
+        .tutor-live-canvas {
             display: block;
             width: 100%;
             height: 100%;
             object-fit: cover;
             pointer-events: none;
+        }
+
+        .tutor-face-video,
+        .tutor-live-canvas.is-mirror {
+            transform: scaleX(-1);
+        }
+
+        .tutor-live-badge {
+            position: absolute;
+            top: 0.4rem;
+            left: 0.4rem;
+            z-index: 2;
+            padding: 0.15rem 0.4rem;
+            border-radius: 0.35rem;
+            background: rgba(22, 163, 74, 0.9);
+            color: #fff;
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            pointer-events: none;
+        }
+
+        .tutor-bg-field {
+            margin: 0 0 0.85rem;
+        }
+
+        .tutor-bg-field > span {
+            display: block;
+            margin-bottom: 0.4rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .tutor-bg-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+        }
+
+        .tutor-bg-options button {
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 0.3rem 0.65rem;
+            background: #fff;
+            color: inherit;
+            font: 600 0.7rem Inter, ui-sans-serif, system-ui, sans-serif;
+            cursor: pointer;
+        }
+
+        .tutor-bg-options button.is-active {
+            border-color: #2563eb;
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .tutor-bg-swatch {
+            width: 0.7rem;
+            height: 0.7rem;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 0.28rem;
+            vertical-align: -0.08rem;
+            box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.12);
         }
 
         .tutor-photo-side {
@@ -534,6 +606,28 @@
             padding-top: 0.15rem;
             min-width: 0;
             flex: 1;
+        }
+
+        .tutor-sync-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            justify-self: start;
+            font: 600 0.72rem Inter, ui-sans-serif, system-ui, sans-serif;
+            color: #334155;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .tutor-sync-toggle[hidden] {
+            display: none !important;
+        }
+
+        .tutor-sync-toggle input {
+            width: 0.95rem;
+            height: 0.95rem;
+            accent-color: #2563eb;
+            cursor: pointer;
         }
 
         .tutor-photo-change {
@@ -974,6 +1068,8 @@
     <div id="newsPip" class="news-pip" aria-label="News reader">
         <div id="newsPipFace" class="news-pip-face" hidden>
             <img id="newsPipPhoto" class="tutor-face-photo" alt="Tutor">
+            <video id="newsPipVideo" class="tutor-face-video" autoplay playsinline muted hidden></video>
+            <canvas id="newsPipCanvas" class="tutor-live-canvas is-mirror" hidden></canvas>
             <div class="tutor-lips" id="newsPipLips" aria-hidden="true">
                 <div class="tutor-lip tutor-lip-upper"></div>
                 <div class="tutor-mouth-gap"><span class="tutor-mouth-teeth"></span></div>
@@ -986,17 +1082,20 @@
     <div id="tutorSheet" class="sheet" aria-hidden="true">
         <div class="sheet-card tutor-card" role="dialog" aria-label="Tutor profile">
             <h2>Tutor profile</h2>
-            <p class="tutor-lead">Add a photo, then drag the mouth box onto the lips. Mouth motion stays subtle and follows the mic.</p>
+            <p class="tutor-lead">Use a photo with lip sync, a still selfie, or plain live video. Live video can use Zoom-style backgrounds.</p>
             <div class="tutor-photo-row">
                 <div class="tutor-photo-stage">
-                    <button id="tutorPhotoPick" class="tutor-photo-pick" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Add photo or take selfie" title="Photo or camera">
+                    <button id="tutorPhotoPick" class="tutor-photo-pick" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Add photo, selfie, or live video" title="Photo or camera">
                         <span id="tutorPhotoEmpty" class="tutor-face is-empty">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                             Photo / Cam
                         </span>
                     </button>
-                    <div id="tutorPhotoFace" class="tutor-face tutor-face-place" hidden aria-label="Lip placement area">
+                    <div id="tutorPhotoFace" class="tutor-face tutor-face-place" hidden aria-label="Tutor preview">
                         <img id="tutorPhotoImage" class="tutor-face-photo" alt="Tutor photo">
+                        <video id="tutorPreviewVideo" class="tutor-face-video" autoplay playsinline muted hidden></video>
+                        <canvas id="tutorPreviewCanvas" class="tutor-live-canvas is-mirror" hidden></canvas>
+                        <span id="tutorLiveBadge" class="tutor-live-badge" hidden>LIVE</span>
                         <div class="tutor-lips is-editable" id="tutorPreviewLips" aria-label="Drag to place lips">
                             <div class="tutor-lip tutor-lip-upper"></div>
                             <div class="tutor-mouth-gap"><span class="tutor-mouth-teeth"></span></div>
@@ -1007,14 +1106,30 @@
                     <div id="tutorPhotoMenu" class="tutor-photo-menu" hidden role="menu">
                         <button type="button" data-photo="upload" role="menuitem">Upload photo</button>
                         <button type="button" data-photo="camera" role="menuitem">Live selfie</button>
+                        <button type="button" data-photo="live" role="menuitem">Live video</button>
                     </div>
                 </div>
                 <div class="tutor-photo-side">
-                    <button id="tutorPhotoChange" class="tutor-photo-change" type="button" hidden aria-haspopup="menu" aria-expanded="false">Change photo</button>
+                    <label id="tutorSyncToggle" class="tutor-sync-toggle" hidden>
+                        <input id="tutorSyncCheck" type="checkbox" checked>
+                        Lip sync
+                    </label>
+                    <button id="tutorPhotoChange" class="tutor-photo-change" type="button" hidden aria-haspopup="menu" aria-expanded="false">Change source</button>
                     <p id="tutorPlaceHint" class="tutor-place-hint" hidden>Drag the dashed box onto the mouth. Pull the blue corner to resize.</p>
                 </div>
             </div>
-            <p id="tutorStatus" class="tutor-status">Add a photo to show the news-reader portrait.</p>
+            <div id="tutorBgField" class="tutor-bg-field" hidden>
+                <span>Background</span>
+                <div id="tutorBgOptions" class="tutor-bg-options" role="group" aria-label="Live video background">
+                    <button type="button" data-bg="none" class="is-active">None</button>
+                    <button type="button" data-bg="blur">Blur</button>
+                    <button type="button" data-bg="office"><span class="tutor-bg-swatch" style="background:#dbe4f0"></span>Office</button>
+                    <button type="button" data-bg="classroom"><span class="tutor-bg-swatch" style="background:linear-gradient(180deg,#f3e7d3,#c7d7ea)"></span>Classroom</button>
+                    <button type="button" data-bg="soft"><span class="tutor-bg-swatch" style="background:linear-gradient(135deg,#e0f2fe,#fce7f3)"></span>Soft</button>
+                    <button type="button" data-bg="dark"><span class="tutor-bg-swatch" style="background:#1e293b"></span>Dark</button>
+                </div>
+            </div>
+            <p id="tutorStatus" class="tutor-status">Add a photo or start live video for the news-reader portrait.</p>
             <div class="sheet-field">
                 <label for="tutorNameInput">Display name</label>
                 <input id="tutorNameInput" type="text" maxlength="40" placeholder="News reader name">
@@ -1197,9 +1312,16 @@
         const tutorPhotoImage = document.getElementById("tutorPhotoImage");
         const tutorPhotoMenu = document.getElementById("tutorPhotoMenu");
         const tutorPhotoChange = document.getElementById("tutorPhotoChange");
+        const tutorSyncToggle = document.getElementById("tutorSyncToggle");
+        const tutorSyncCheck = document.getElementById("tutorSyncCheck");
         const tutorPlaceHint = document.getElementById("tutorPlaceHint");
         const tutorPreviewLips = document.getElementById("tutorPreviewLips");
         const tutorLipHandle = document.getElementById("tutorLipHandle");
+        const tutorPreviewVideo = document.getElementById("tutorPreviewVideo");
+        const tutorPreviewCanvas = document.getElementById("tutorPreviewCanvas");
+        const tutorLiveBadge = document.getElementById("tutorLiveBadge");
+        const tutorBgField = document.getElementById("tutorBgField");
+        const tutorBgOptions = document.getElementById("tutorBgOptions");
         const tutorStatus = document.getElementById("tutorStatus");
         const tutorVoiceBtn = document.getElementById("tutorVoiceBtn");
         const tutorCloseBtn = document.getElementById("tutorCloseBtn");
@@ -1207,12 +1329,25 @@
         const newsPip = document.getElementById("newsPip");
         const newsPipFace = document.getElementById("newsPipFace");
         const newsPipPhoto = document.getElementById("newsPipPhoto");
+        const newsPipVideo = document.getElementById("newsPipVideo");
+        const newsPipCanvas = document.getElementById("newsPipCanvas");
         const newsPipLabel = document.getElementById("newsPipLabel");
+        const newsPipLips = document.getElementById("newsPipLips");
         const tutorLipNodes = [
             tutorPreviewLips,
-            document.getElementById("newsPipLips")
+            newsPipLips
         ].filter(Boolean);
         const DEFAULT_LIPS = { x: 50, y: 72, w: 26 };
+        const TUTOR_BG_PRESETS = {
+            none: null,
+            blur: "blur",
+            office: { type: "color", color: "#dbe4f0" },
+            classroom: { type: "gradient", top: "#f3e7d3", bottom: "#c7d7ea" },
+            soft: { type: "gradient", top: "#e0f2fe", bottom: "#fce7f3" },
+            dark: { type: "color", color: "#1e293b" }
+        };
+        const SELFIE_SEG_SRC = "https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1675465747/selfie_segmentation.js";
+        const SELFIE_SEG_BASE = "https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1675465747/";
         const cameraSheet = document.getElementById("cameraSheet");
         const cameraVideo = document.getElementById("cameraVideo");
         const cameraCancel = document.getElementById("cameraCancel");
@@ -1268,7 +1403,7 @@
         let hoverHandle = null;
         let cameraStream = null;
         let cameraPurpose = "gallery";
-        let tutorProfile = { name: "Tutor", photo: "", lips: { ...DEFAULT_LIPS } };
+        let tutorProfile = { name: "Tutor", photo: "", mode: "photo", bg: "none", sync: true, lips: { ...DEFAULT_LIPS } };
         let voiceStream = null;
         let voiceContext = null;
         let voiceAnalyser = null;
@@ -1276,6 +1411,14 @@
         let voiceOn = false;
         let mouthLevel = 0;
         let lipDrag = null;
+        let tutorLiveStream = null;
+        let tutorLiveOn = false;
+        let tutorLiveRaf = 0;
+        let tutorSegmenter = null;
+        let tutorSegmenterReady = false;
+        let tutorSegmenterLoading = null;
+        let tutorBgWorkCanvas = null;
+        let tutorBgWorkCtx = null;
         let pipDrag = null;
         let isRecording = false;
         let mediaRecorder = null;
@@ -1331,6 +1474,51 @@
             if (neededW > width) width = Math.max(neededW, width + 480);
             if (neededH > height) height = Math.max(neededH, height + 480);
             applyBoardSize(width, height);
+        }
+
+        function shiftScene(dx, dy) {
+            if (!dx && !dy) return;
+            scene.forEach((item) => moveItem(item, dx, dy));
+            if (draft) moveItem(draft, dx, dy);
+            if (textEditor) {
+                textEditor.dataset.x = String(Number(textEditor.dataset.x) + dx);
+                textEditor.dataset.y = String(Number(textEditor.dataset.y) + dy);
+            }
+        }
+
+        function growBoardForPan(deltaScrollX, deltaScrollY) {
+            const view = viewSize();
+            const margin = 96;
+            const chunk = 480;
+            let nextLeft = boardScroll.scrollLeft + deltaScrollX;
+            let nextTop = boardScroll.scrollTop + deltaScrollY;
+            let growLeft = 0;
+            let growTop = 0;
+
+            if (nextLeft < 0) growLeft = Math.max(chunk, Math.ceil(-nextLeft + margin));
+            if (nextTop < 0) growTop = Math.max(chunk, Math.ceil(-nextTop + margin));
+
+            if (growLeft || growTop) {
+                shiftScene(growLeft, growTop);
+                applyBoardSize(boardWidth + growLeft, boardHeight + growTop);
+                nextLeft += growLeft;
+                nextTop += growTop;
+            }
+
+            let growRight = 0;
+            let growBottom = 0;
+            if (nextLeft + view.w > boardWidth - margin) {
+                growRight = Math.max(chunk, Math.ceil((nextLeft + view.w + margin) - boardWidth));
+            }
+            if (nextTop + view.h > boardHeight - margin) {
+                growBottom = Math.max(chunk, Math.ceil((nextTop + view.h + margin) - boardHeight));
+            }
+            if (growRight || growBottom) {
+                applyBoardSize(boardWidth + growRight, boardHeight + growBottom);
+            }
+
+            boardScroll.scrollLeft = Math.max(0, nextLeft);
+            boardScroll.scrollTop = Math.max(0, nextTop);
         }
 
         function fitBoard() {
@@ -2385,10 +2573,11 @@
                 const item = scene[dragState.index];
                 if (dragState.mode === "pan") {
                     const client = event.touches ? event.touches[0] : event;
-                    boardScroll.scrollLeft -= client.clientX - dragState.lastX;
-                    boardScroll.scrollTop -= client.clientY - dragState.lastY;
+                    const deltaScrollX = -(client.clientX - dragState.lastX);
+                    const deltaScrollY = -(client.clientY - dragState.lastY);
                     dragState.lastX = client.clientX;
                     dragState.lastY = client.clientY;
+                    growBoardForPan(deltaScrollX, deltaScrollY);
                     return;
                 }
                 if (item && dragState.mode === "resize") {
@@ -2537,34 +2726,285 @@
             });
         }
 
-        function setTutorPhoto(dataUrl) {
-            tutorProfile.photo = dataUrl || "";
-            tutorProfile.lips = normalizeLips(tutorProfile.lips);
-            if (tutorProfile.photo) {
-                tutorPhotoPick.hidden = true;
-                tutorPhotoEmpty.hidden = true;
-                tutorPhotoFace.hidden = false;
-                tutorPhotoChange.hidden = false;
-                tutorPlaceHint.hidden = false;
+        function tutorHasPortrait() {
+            return tutorLiveOn || Boolean(tutorProfile.photo);
+        }
+
+        function syncTutorBgButtons() {
+            Array.from(tutorBgOptions.querySelectorAll("[data-bg]")).forEach((button) => {
+                button.classList.toggle("is-active", button.dataset.bg === tutorProfile.bg);
+            });
+        }
+
+        function tutorSyncEnabled() {
+            return Boolean(tutorProfile.sync) && Boolean(tutorProfile.photo) && !tutorLiveOn;
+        }
+
+        function setTutorMediaVisibility() {
+            const live = tutorLiveOn;
+            const photo = Boolean(tutorProfile.photo) && !live;
+            const syncOn = photo && Boolean(tutorProfile.sync);
+            tutorPhotoPick.hidden = live || photo;
+            tutorPhotoEmpty.hidden = live || photo;
+            tutorPhotoFace.hidden = !(live || photo);
+            tutorSyncToggle.hidden = !photo;
+            tutorPhotoChange.hidden = !(live || photo);
+            tutorPlaceHint.hidden = !syncOn;
+            tutorBgField.hidden = !live;
+            tutorLiveBadge.hidden = !live;
+            tutorPreviewLips.hidden = !syncOn;
+            newsPipLips.hidden = !syncOn;
+            tutorSyncCheck.checked = Boolean(tutorProfile.sync);
+            tutorPhotoFace.classList.toggle("tutor-face-place", syncOn);
+            tutorPhotoImage.hidden = !photo;
+            newsPipPhoto.hidden = !photo;
+            const useCanvas = live && tutorProfile.bg !== "none";
+            tutorPreviewVideo.hidden = !live || useCanvas;
+            newsPipVideo.hidden = !live || useCanvas;
+            tutorPreviewCanvas.hidden = !useCanvas;
+            newsPipCanvas.hidden = !useCanvas;
+            if (photo) {
                 tutorPhotoImage.src = tutorProfile.photo;
                 newsPipPhoto.src = tutorProfile.photo;
-                newsPipFace.hidden = false;
-                newsPip.classList.add("is-visible");
-                tutorStatus.textContent = "Drag the mouth box onto the lips, then start voice.";
             } else {
-                tutorPhotoPick.hidden = false;
-                tutorPhotoEmpty.hidden = false;
-                tutorPhotoFace.hidden = true;
-                tutorPhotoChange.hidden = true;
-                tutorPlaceHint.hidden = true;
                 tutorPhotoImage.removeAttribute("src");
                 newsPipPhoto.removeAttribute("src");
+            }
+            if (live || photo) {
+                newsPipFace.hidden = false;
+                newsPip.classList.add("is-visible");
+            } else {
                 newsPipFace.hidden = true;
                 newsPip.classList.remove("is-visible");
-                tutorStatus.textContent = "Add a photo to show the news-reader portrait.";
             }
+            syncTutorBgButtons();
             applyLipPlacement();
-            setMouthAmount(mouthLevel);
+            if (!syncOn) {
+                mouthLevel = 0;
+                setMouthAmount(0);
+            } else {
+                setMouthAmount(mouthLevel);
+            }
+        }
+
+        function setTutorSync(enabled) {
+            tutorProfile.sync = Boolean(enabled);
+            setTutorMediaVisibility();
+            tutorStatus.textContent = tutorProfile.sync
+                ? "Lip sync on. Drag the mouth box onto the lips, then speak."
+                : "Lip sync off. Showing the photo only.";
+        }
+
+        function setTutorPhoto(dataUrl) {
+            stopTutorLive();
+            tutorProfile.mode = "photo";
+            tutorProfile.photo = dataUrl || "";
+            tutorProfile.lips = normalizeLips(tutorProfile.lips);
+            setTutorMediaVisibility();
+            tutorStatus.textContent = tutorProfile.photo
+                ? "Drag the mouth box onto the lips, then start voice."
+                : "Add a photo or start live video for the news-reader portrait.";
+        }
+
+        function loadScriptOnce(src) {
+            return new Promise((resolve, reject) => {
+                const existing = document.querySelector(`script[data-src="${src}"]`);
+                if (existing) {
+                    if (existing.dataset.loaded === "true") resolve();
+                    else existing.addEventListener("load", () => resolve(), { once: true });
+                    existing.addEventListener("error", () => reject(new Error("script failed")), { once: true });
+                    return;
+                }
+                const script = document.createElement("script");
+                script.src = src;
+                script.async = true;
+                script.dataset.src = src;
+                script.onload = () => {
+                    script.dataset.loaded = "true";
+                    resolve();
+                };
+                script.onerror = () => reject(new Error("Could not load " + src));
+                document.head.appendChild(script);
+            });
+        }
+
+        function ensureBgWorkCanvas(width, height) {
+            if (!tutorBgWorkCanvas) {
+                tutorBgWorkCanvas = document.createElement("canvas");
+                tutorBgWorkCtx = tutorBgWorkCanvas.getContext("2d", { willReadFrequently: true });
+            }
+            if (tutorBgWorkCanvas.width !== width || tutorBgWorkCanvas.height !== height) {
+                tutorBgWorkCanvas.width = width;
+                tutorBgWorkCanvas.height = height;
+            }
+            return tutorBgWorkCtx;
+        }
+
+        function paintTutorBackground(ctx, width, height, video) {
+            const preset = TUTOR_BG_PRESETS[tutorProfile.bg];
+            if (!preset || preset === "blur") {
+                ctx.save();
+                ctx.filter = "blur(14px)";
+                ctx.drawImage(video, 0, 0, width, height);
+                ctx.restore();
+                ctx.fillStyle = "rgba(15, 23, 42, 0.12)";
+                ctx.fillRect(0, 0, width, height);
+                return;
+            }
+            if (preset.type === "color") {
+                ctx.fillStyle = preset.color;
+                ctx.fillRect(0, 0, width, height);
+                return;
+            }
+            const gradient = ctx.createLinearGradient(0, 0, 0, height);
+            gradient.addColorStop(0, preset.top);
+            gradient.addColorStop(1, preset.bottom);
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+        }
+
+        function compositeTutorFrame(targetCanvas, video, segmentationMask) {
+            if (!video.videoWidth || !video.videoHeight) return;
+            const width = targetCanvas.clientWidth || 180;
+            const height = targetCanvas.clientHeight || 240;
+            if (targetCanvas.width !== width || targetCanvas.height !== height) {
+                targetCanvas.width = width;
+                targetCanvas.height = height;
+            }
+            const ctx = targetCanvas.getContext("2d");
+            paintTutorBackground(ctx, width, height, video);
+            if (!segmentationMask) {
+                ctx.drawImage(video, 0, 0, width, height);
+                return;
+            }
+            const work = ensureBgWorkCanvas(width, height);
+            work.clearRect(0, 0, width, height);
+            work.drawImage(video, 0, 0, width, height);
+            work.globalCompositeOperation = "destination-in";
+            work.drawImage(segmentationMask, 0, 0, width, height);
+            work.globalCompositeOperation = "source-over";
+            ctx.drawImage(tutorBgWorkCanvas, 0, 0);
+        }
+
+        async function ensureTutorSegmenter() {
+            if (tutorSegmenterReady) return tutorSegmenter;
+            if (tutorSegmenterLoading) return tutorSegmenterLoading;
+            tutorSegmenterLoading = (async () => {
+                await loadScriptOnce(SELFIE_SEG_SRC);
+                if (typeof SelfieSegmentation === "undefined") {
+                    throw new Error("Selfie segmentation unavailable");
+                }
+                tutorSegmenter = new SelfieSegmentation({
+                    locateFile: (file) => SELFIE_SEG_BASE + file
+                });
+                tutorSegmenter.setOptions({ modelSelection: 1 });
+                tutorSegmenter.onResults((results) => {
+                    if (!tutorLiveOn || tutorProfile.bg === "none") return;
+                    compositeTutorFrame(newsPipCanvas, newsPipVideo, results.segmentationMask);
+                    compositeTutorFrame(tutorPreviewCanvas, tutorPreviewVideo, results.segmentationMask);
+                });
+                if (typeof tutorSegmenter.initialize === "function") {
+                    await tutorSegmenter.initialize();
+                }
+                tutorSegmenterReady = true;
+                return tutorSegmenter;
+            })();
+            try {
+                return await tutorSegmenterLoading;
+            } catch (error) {
+                tutorSegmenterLoading = null;
+                throw error;
+            }
+        }
+
+        function stopTutorLiveLoop() {
+            if (tutorLiveRaf) cancelAnimationFrame(tutorLiveRaf);
+            tutorLiveRaf = 0;
+        }
+
+        function tickTutorLive() {
+            tutorLiveRaf = requestAnimationFrame(tickTutorLive);
+            if (!tutorLiveOn || tutorProfile.bg === "none") return;
+            if (!tutorSegmenterReady || !newsPipVideo.videoWidth) return;
+            tutorSegmenter.send({ image: newsPipVideo }).catch(() => {});
+        }
+
+        function stopTutorLive() {
+            stopTutorLiveLoop();
+            if (tutorLiveStream) {
+                tutorLiveStream.getTracks().forEach((track) => track.stop());
+            }
+            tutorLiveStream = null;
+            tutorLiveOn = false;
+            tutorPreviewVideo.srcObject = null;
+            newsPipVideo.srcObject = null;
+        }
+
+        async function startTutorLive() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                window.alert("Camera is not available in this browser.");
+                return false;
+            }
+            let stream = null;
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: "user" }, width: { ideal: 640 }, height: { ideal: 480 } },
+                    audio: false
+                });
+            } catch (error) {
+                window.alert("Could not access the camera for live video.");
+                return false;
+            }
+            stopTutorLive();
+            tutorLiveStream = stream;
+            tutorProfile.mode = "live";
+            tutorProfile.photo = "";
+            tutorPreviewVideo.srcObject = tutorLiveStream;
+            newsPipVideo.srcObject = tutorLiveStream;
+            tutorLiveOn = true;
+            setTutorMediaVisibility();
+            tutorStatus.textContent = "Live video on. Pick a background if you want a Zoom-style look.";
+            if (tutorProfile.bg !== "none") {
+                try {
+                    await ensureTutorSegmenter();
+                    stopTutorLiveLoop();
+                    tickTutorLive();
+                } catch (error) {
+                    tutorProfile.bg = "none";
+                    setTutorMediaVisibility();
+                    tutorStatus.textContent = "Live video on. Background replace needs network; using plain camera.";
+                }
+            }
+            try {
+                await startVoice();
+            } catch (error) {
+                /* mic optional for live picture */
+            }
+            return true;
+        }
+
+        async function setTutorBackground(bg) {
+            if (!TUTOR_BG_PRESETS.hasOwnProperty(bg)) return;
+            tutorProfile.bg = bg;
+            syncTutorBgButtons();
+            if (!tutorLiveOn) return;
+            if (bg === "none") {
+                stopTutorLiveLoop();
+                setTutorMediaVisibility();
+                tutorStatus.textContent = "Live video on with plain camera background.";
+                return;
+            }
+            try {
+                await ensureTutorSegmenter();
+                setTutorMediaVisibility();
+                stopTutorLiveLoop();
+                tickTutorLive();
+                tutorStatus.textContent = "Live background applied. Speak naturally — your real mouth is used.";
+            } catch (error) {
+                tutorProfile.bg = "none";
+                setTutorMediaVisibility();
+                tutorStatus.textContent = "Could not load background replace. Plain live video stays on.";
+            }
         }
 
         function readVoiceLevel() {
@@ -2581,7 +3021,7 @@
 
         function tickTutorLips() {
             requestAnimationFrame(tickTutorLips);
-            if (!tutorProfile.photo || !newsPip.classList.contains("is-visible")) return;
+            if (!tutorSyncEnabled() || !newsPip.classList.contains("is-visible")) return;
             const target = voiceOn ? readVoiceLevel() : 0;
             mouthLevel += (target - mouthLevel) * (target > mouthLevel ? 0.55 : 0.22);
             setMouthAmount(mouthLevel);
@@ -2594,7 +3034,7 @@
         }
 
         function startLipDrag(event, mode) {
-            if (!tutorProfile.photo || tutorPhotoFace.hidden) return;
+            if (!tutorSyncEnabled() || tutorPhotoFace.hidden || tutorPreviewLips.hidden) return;
             const point = pointerFromEvent(event);
             const rect = tutorPhotoFace.getBoundingClientRect();
             if (!rect.width || !rect.height) return;
@@ -2687,19 +3127,30 @@
                 const raw = localStorage.getItem(TUTOR_STORAGE_KEY);
                 if (!raw) return;
                 const parsed = JSON.parse(raw);
+                const bg = TUTOR_BG_PRESETS.hasOwnProperty(parsed.bg) ? parsed.bg : "none";
                 tutorProfile = {
                     name: parsed.name || "Tutor",
                     photo: parsed.photo || parsed.selfie || "",
+                    mode: parsed.mode === "live" ? "live" : "photo",
+                    bg,
+                    sync: parsed.sync !== false,
                     lips: normalizeLips(parsed.lips)
                 };
             } catch (error) {
-                tutorProfile = { name: "Tutor", photo: "", lips: { ...DEFAULT_LIPS } };
+                tutorProfile = { name: "Tutor", photo: "", mode: "photo", bg: "none", sync: true, lips: { ...DEFAULT_LIPS } };
             }
         }
 
         function saveTutorProfile() {
             try {
-                localStorage.setItem(TUTOR_STORAGE_KEY, JSON.stringify(tutorProfile));
+                localStorage.setItem(TUTOR_STORAGE_KEY, JSON.stringify({
+                    name: tutorProfile.name,
+                    photo: tutorLiveOn ? "" : tutorProfile.photo,
+                    mode: tutorLiveOn ? "live" : "photo",
+                    bg: tutorProfile.bg || "none",
+                    sync: tutorProfile.sync !== false,
+                    lips: normalizeLips(tutorProfile.lips)
+                }));
                 return true;
             } catch (error) {
                 return false;
@@ -2709,7 +3160,30 @@
         function syncTutorProfileUi() {
             tutorNameInput.value = tutorProfile.name || "";
             newsPipLabel.textContent = tutorProfile.name || "Tutor";
-            setTutorPhoto(tutorProfile.photo);
+            if (tutorLiveOn) {
+                setTutorMediaVisibility();
+                return;
+            }
+            if (tutorProfile.mode === "live") {
+                setTutorMediaVisibility();
+                tutorStatus.textContent = "Choose Live video to turn the camera back on.";
+                return;
+            }
+            tutorProfile.mode = "photo";
+            setTutorMediaVisibility();
+            if (!tutorProfile.photo) {
+                tutorPhotoPick.hidden = false;
+                tutorPhotoEmpty.hidden = false;
+                tutorPhotoFace.hidden = true;
+                tutorPhotoChange.hidden = true;
+                tutorPlaceHint.hidden = true;
+                tutorBgField.hidden = true;
+                newsPipFace.hidden = true;
+                newsPip.classList.remove("is-visible");
+                tutorStatus.textContent = "Add a photo or start live video for the news-reader portrait.";
+            } else {
+                tutorStatus.textContent = "Drag the mouth box onto the lips, then start voice.";
+            }
         }
 
         async function applyTutorPhotoFile(file) {
@@ -2726,12 +3200,16 @@
         }
 
         async function ensureVoiceForTutor() {
-            if (!tutorProfile.photo || voiceOn) return;
+            if ((!tutorProfile.photo && !tutorLiveOn) || voiceOn) return;
             try {
                 await startVoice();
-                tutorStatus.textContent = "Mic on. Speak and the mouth will open softly.";
+                tutorStatus.textContent = tutorLiveOn
+                    ? "Mic on with live video."
+                    : "Mic on. Speak and the mouth will open softly.";
             } catch (error) {
-                tutorStatus.textContent = "Click Start voice and allow the microphone to animate the lips.";
+                tutorStatus.textContent = tutorLiveOn
+                    ? "Live video on. Click Start voice if you also want mic for recording."
+                    : "Click Start voice and allow the microphone to animate the lips.";
             }
         }
 
@@ -2845,8 +3323,7 @@
         }
 
         function drawPipToRecord(targetCtx) {
-            if (!newsPip.classList.contains("is-visible") || !tutorProfile.photo) return;
-            if (!newsPipPhoto.complete || !newsPipPhoto.naturalWidth) return;
+            if (!newsPip.classList.contains("is-visible") || !tutorHasPortrait()) return;
             const rect = newsPip.getBoundingClientRect();
             const radius = 12;
             targetCtx.save();
@@ -2860,13 +3337,32 @@
             targetCtx.clip();
             targetCtx.fillStyle = "#0f172a";
             targetCtx.fillRect(rect.left, rect.top, rect.width, rect.height);
-            const iw = newsPipPhoto.naturalWidth;
-            const ih = newsPipPhoto.naturalHeight;
-            const scale = Math.max(rect.width / iw, rect.height / ih);
-            const dw = iw * scale;
-            const dh = ih * scale;
-            targetCtx.drawImage(newsPipPhoto, rect.left + (rect.width - dw) / 2, rect.top + (rect.height - dh) / 2, dw, dh);
-            drawPipLips(targetCtx, rect, mouthLevel);
+
+            if (tutorLiveOn) {
+                const source = tutorProfile.bg !== "none" && !newsPipCanvas.hidden
+                    ? newsPipCanvas
+                    : newsPipVideo;
+                if (source && ((source.videoWidth || source.width) > 0)) {
+                    targetCtx.save();
+                    if (source === newsPipVideo || newsPipCanvas.classList.contains("is-mirror")) {
+                        targetCtx.translate(rect.left + rect.width, rect.top);
+                        targetCtx.scale(-1, 1);
+                        targetCtx.drawImage(source, 0, 0, rect.width, rect.height);
+                    } else {
+                        targetCtx.drawImage(source, rect.left, rect.top, rect.width, rect.height);
+                    }
+                    targetCtx.restore();
+                }
+            } else if (newsPipPhoto.complete && newsPipPhoto.naturalWidth) {
+                const iw = newsPipPhoto.naturalWidth;
+                const ih = newsPipPhoto.naturalHeight;
+                const scale = Math.max(rect.width / iw, rect.height / ih);
+                const dw = iw * scale;
+                const dh = ih * scale;
+                targetCtx.drawImage(newsPipPhoto, rect.left + (rect.width - dw) / 2, rect.top + (rect.height - dh) / 2, dw, dh);
+                if (tutorSyncEnabled()) drawPipLips(targetCtx, rect, mouthLevel);
+            }
+
             targetCtx.fillStyle = "rgba(15, 23, 42, 0.7)";
             targetCtx.fillRect(rect.left + 6, rect.bottom - 28, rect.width - 12, 20);
             targetCtx.fillStyle = "#fff";
@@ -2912,8 +3408,8 @@
 
         async function startRecording() {
             if (isRecording) return;
-            if (!tutorProfile.photo) {
-                window.alert("Add a tutor photo first so the news-reader PIP is included.");
+            if (!tutorHasPortrait()) {
+                window.alert("Add a tutor photo or start live video first so the news-reader PIP is included.");
                 openTutorSheet();
                 return;
             }
@@ -3017,6 +3513,9 @@
             event.stopPropagation();
             setPhotoMenuOpen(tutorPhotoMenu.hidden);
         });
+        tutorSyncCheck.addEventListener("change", () => {
+            setTutorSync(tutorSyncCheck.checked);
+        });
         tutorPhotoMenu.addEventListener("click", (event) => {
             const button = event.target.closest("[data-photo]");
             if (!button) return;
@@ -3024,6 +3523,16 @@
             setPhotoMenuOpen(false);
             if (button.dataset.photo === "upload") tutorPhotoInput.click();
             if (button.dataset.photo === "camera") openCamera("selfie");
+            if (button.dataset.photo === "live") {
+                startTutorLive().catch(() => {
+                    tutorStatus.textContent = "Could not start live video.";
+                });
+            }
+        });
+        tutorBgOptions.addEventListener("click", (event) => {
+            const button = event.target.closest("[data-bg]");
+            if (!button) return;
+            setTutorBackground(button.dataset.bg);
         });
         tutorPhotoInput.addEventListener("change", async () => {
             const file = tutorPhotoInput.files && tutorPhotoInput.files[0];
